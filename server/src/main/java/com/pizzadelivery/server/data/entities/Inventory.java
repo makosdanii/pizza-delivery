@@ -1,6 +1,8 @@
 package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.sql.Timestamp;
 
@@ -8,24 +10,34 @@ import java.sql.Timestamp;
 public class Inventory {
     @EmbeddedId
     private InventoryPK id;
+    @PositiveOrZero
     @Basic
     @Column(name = "expense", nullable = true)
-    private Byte expense;
+    private Integer expense;
+    @Positive
     @Basic
     @Column(name = "current_qt", nullable = false)
     private int currentQt;
+
     @ManyToOne
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;
 
-    public Byte getExpense() {
+    public InventoryPK getId() {
+        return id;
+    }
+
+    public void setId(InventoryPK id) {
+        this.id = id;
+    }
+
+    public Integer getExpense() {
         return expense;
     }
 
-    public void setExpense(Byte expense) {
+    public void setExpense(Integer expense) {
         this.expense = expense;
     }
-
 
     public int getCurrentQt() {
         return currentQt;
@@ -39,10 +51,17 @@ public class Inventory {
         return id.getModifiedAt();
     }
 
+    public Ingredient getIngredientByIngredientId() {
+        return ingredientByIngredientId;
+    }
+
+    public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
+        this.ingredientByIngredientId = ingredientByIngredientId;
+    }
+
     public void setModifiedAt(Timestamp modifiedAt) {
         id.setModifiedAt(modifiedAt);
     }
-
 
     public Car getCarByCarId() {
         return id.getCarByCarId();
@@ -52,19 +71,7 @@ public class Inventory {
         id.setCarByCarId(carByCarId);
     }
 
-    public Ingredient getIngredientByIngredientId() {
-        return ingredientByIngredientId;
-    }
-
-    public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
-        this.ingredientByIngredientId = ingredientByIngredientId;
-    }
-
-    public InventoryPK getId() {
-        return id;
-    }
-
-    public void setId(InventoryPK id) {
-        this.id = id;
+    public Inventory() {
+        id = new InventoryPK();
     }
 }

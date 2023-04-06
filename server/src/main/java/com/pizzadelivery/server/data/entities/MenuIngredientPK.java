@@ -3,15 +3,19 @@ package com.pizzadelivery.server.data.entities;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class MenuIngredientPK implements Serializable {
+    @Null
     @ManyToOne
     @JoinColumn(name = "menu_id", referencedColumnName = "id", nullable = false)
     private Menu menuByMenuId;
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;

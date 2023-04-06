@@ -1,43 +1,54 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @Entity
 @Table(name = "food_order", schema = "pizza_delivery", catalog = "")
 public class FoodOrder {
-    @EmbeddedId
-    FoodOrderPK id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @Column(name = "id", nullable = false)
+    private int id;
+    @Basic
+    @Column(name = "ordered_at", nullable = false)
+    private Timestamp orderedAt;
+    @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
-    @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
-    private Car carByCarId;
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    private User userByUserId;
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "menu_id", referencedColumnName = "id", nullable = false)
     private Menu menuByMenuId;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public Timestamp getOrderedAt() {
-        return id.getOrderedAt();
+        return orderedAt;
     }
 
     public void setOrderedAt(Timestamp orderedAt) {
-        id.setOrderedAt(orderedAt);
+        this.orderedAt = orderedAt;
     }
 
     public User getUserByUserId() {
-        return id.getUserByUserId();
+        return userByUserId;
     }
 
     public void setUserByUserId(User userByUserId) {
-        id.setUserByUserId(userByUserId);
-    }
-
-    public Car getCarByCarId() {
-        return carByCarId;
-    }
-
-    public void setCarByCarId(Car carByCarId) {
-        this.carByCarId = carByCarId;
+        this.userByUserId = userByUserId;
     }
 
     public Menu getMenuByMenuId() {
@@ -48,11 +59,16 @@ public class FoodOrder {
         this.menuByMenuId = menuByMenuId;
     }
 
-    public FoodOrderPK getId() {
-        return id;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FoodOrder foodOrder = (FoodOrder) o;
+        return id == foodOrder.id;
     }
 
-    public void setId(FoodOrderPK id) {
-        this.id = id;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

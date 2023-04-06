@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Null;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import java.util.Objects;
         scope = Role.class)
 @Entity
 public class Role {
+    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -23,7 +25,7 @@ public class Role {
     @Column(name = "name", nullable = false, length = 64)
     private String name;
 
-    @OneToMany(mappedBy = "roleByRoleId", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "roleByRoleId")
     private Collection<User> usersById;
 
     public int getId() {

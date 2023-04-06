@@ -23,7 +23,7 @@ public class StreetName {
     private String that;
     @Basic
     @Column(name = "until_no", nullable = false)
-    private byte untilNo;
+    private int untilNo;
 
     @OneToMany(mappedBy = "streetNameByEdgeName")
     private Collection<Edge> edgesById;
@@ -44,11 +44,11 @@ public class StreetName {
         this.that = that;
     }
 
-    public byte getUntilNo() {
+    public int getUntilNo() {
         return untilNo;
     }
 
-    public void setUntilNo(byte untilNo) {
+    public void setUntilNo(int untilNo) {
         this.untilNo = untilNo;
     }
 

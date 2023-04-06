@@ -18,5 +18,6 @@
         <class>com.pizzadelivery.server.data.entities.Role</class>
         <class>com.pizzadelivery.server.data.entities.StreetName</class>
         <class>com.pizzadelivery.server.data.entities.User</class>
+        <class>com.pizzadelivery.server.data.entities.OrderDelivery</class>
     </persistence-unit>
 </persistence>

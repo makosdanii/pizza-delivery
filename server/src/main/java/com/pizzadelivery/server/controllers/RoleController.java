@@ -4,13 +4,15 @@ import com.pizzadelivery.server.data.entities.Role;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.RoleService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 @Validated
 @RestController
@@ -19,15 +21,20 @@ import org.springframework.web.bind.annotation.*;
 public class RoleController extends Controller {
     private RoleService roleService;
 
+    @Autowired
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Role> findUser(@PathVariable @Min(1) @P("id") int id) {
+    public ResponseEntity<Role> findRole(@PathVariable @Positive int id) {
         Role role = roleService.findRole(id);
 
-        return new ResponseEntity<>(role, role.getId() == 0 ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+        return new ResponseEntity<>(role, role.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Role> registerUser(@RequestBody @Valid Role role) {
+    public ResponseEntity<Role> registerRole(@RequestBody @Valid Role role) {
         try {
             role = roleService.createRole(role);
         } catch (AlreadyExistsException e) {
@@ -37,14 +44,18 @@ public class RoleController extends Controller {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Role> updateUser(@PathVariable @Min(1) int id, @RequestBody @Valid Role role) {
-        role = roleService.updateRole(id, role);
+    public ResponseEntity<Role> updateRole(@PathVariable @Positive int id, @RequestBody @Valid Role role) {
+        try {
+            role = roleService.updateRole(id, role);
+        } catch (AlreadyExistsException e) {
+            return ResponseEntity.ok(new Role());
+        }
 
-        return new ResponseEntity<>(role, role.getId() == 0 ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
+        return new ResponseEntity<>(role, role.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable @Min(1) int id) {
+    public ResponseEntity<String> deleteRole(@PathVariable @Positive int id) {
         return new ResponseEntity<>("", roleService.deleteRole(id) ? HttpStatus.OK : HttpStatus.NOT_FOUND);
     }
 }

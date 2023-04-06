@@ -127,3 +127,6 @@ create table food_order(
     FOREIGN KEY (car_id) REFERENCES car(id),
     FOREIGN KEY (menu_id) REFERENCES menu(id)
 );
+
+insert into role(name) value ('admin');
+insert into user(email, name, password, role_id) value ('admin@pizzadomain.com', 'secret', 1);

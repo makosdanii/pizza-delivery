@@ -1,23 +1,41 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Null;
+import jakarta.validation.constraints.Positive;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.Collection;
 import java.util.Objects;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id",
+        scope = Menu.class
+)
 @Entity
 public class Menu {
+    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
     private int id;
     @Basic
+    @NotBlank
     @Column(name = "name", nullable = false, length = 64)
     private String name;
+    @Positive
     @Basic
     @Column(name = "price", nullable = false)
-    private byte price;
-    @OneToMany(mappedBy = "id.menuByMenuId")
+    private int price;
+    @UniqueElements
+    @OneToMany(mappedBy = "id.menuByMenuId", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     private Collection<MenuIngredient> menuIngredientsById;
 
     public int getId() {
@@ -36,11 +54,11 @@ public class Menu {
         this.name = name;
     }
 
-    public byte getPrice() {
+    public int getPrice() {
         return price;
     }
 
-    public void setPrice(byte price) {
+    public void setPrice(int price) {
         this.price = price;
     }
 

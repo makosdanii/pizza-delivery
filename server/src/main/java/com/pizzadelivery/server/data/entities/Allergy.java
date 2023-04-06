@@ -1,16 +1,20 @@
 package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Null;
 
 import java.util.Objects;
 
 @Entity
 public class Allergy {
+    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
     private int id;
     @Basic
+    @NotBlank
     @Column(name = "name", nullable = false, length = 64)
     private String name;
 

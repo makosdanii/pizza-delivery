@@ -1,6 +1,8 @@
 package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.Range;
 
 import java.sql.Timestamp;
 
@@ -9,19 +11,37 @@ import java.sql.Timestamp;
 public class CarIngredient {
     @EmbeddedId
     private CarIngredientPK id;
+    @Range(min = 0, max = 100)
     @Basic
     @Column(name = "current_percent", nullable = false)
-    private byte currentPercent;
+    private int currentPercent;
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;
 
-    public byte getCurrentPercent() {
+    public CarIngredientPK getId() {
+        return id;
+    }
+
+    public void setId(CarIngredientPK id) {
+        this.id = id;
+    }
+
+    public int getCurrentPercent() {
         return currentPercent;
     }
 
-    public void setCurrentPercent(byte currentPercent) {
+    public void setCurrentPercent(int currentPercent) {
         this.currentPercent = currentPercent;
+    }
+
+    public Ingredient getIngredientByIngredientId() {
+        return ingredientByIngredientId;
+    }
+
+    public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
+        this.ingredientByIngredientId = ingredientByIngredientId;
     }
 
     public Timestamp getModifiedAt() {
@@ -40,19 +60,7 @@ public class CarIngredient {
         id.setCarByCarId(carByCarId);
     }
 
-    public Ingredient getIngredientByIngredientId() {
-        return ingredientByIngredientId;
-    }
-
-    public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
-        this.ingredientByIngredientId = ingredientByIngredientId;
-    }
-
-    public CarIngredientPK getId() {
-        return id;
-    }
-
-    public void setId(CarIngredientPK id) {
-        this.id = id;
+    public CarIngredient() {
+        this.id = new CarIngredientPK();
     }
 }

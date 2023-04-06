@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -15,6 +19,7 @@ import java.util.Objects;
         scope = User.class)
 @Entity
 public class User {
+    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -26,7 +31,7 @@ public class User {
     private String email;
     @Basic
     @NotBlank
-    @Column(name = "name", nullable = false, length = 64)
+    @Column(name = "name", length = 64)
     private String name;
     @Basic
     @NotBlank
@@ -34,27 +39,19 @@ public class User {
     private String password;
     @OneToMany(mappedBy = "userByUserId")
     private Collection<Car> carsById;
-    @OneToMany(mappedBy = "id.userByUserId")
+    @OneToMany(mappedBy = "userByUserId", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     private Collection<FoodOrder> foodOrdersById;
 
     @ManyToOne
-    @JoinColumn(name = "street_name_id", referencedColumnName = "id", nullable = false)
+    @NotNull
+    @JoinColumn(name = "street_name_id", referencedColumnName = "id")
     private StreetName streetNameByStreetNameId;
 
     @ManyToOne
+    @NotNull
     @JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false)
     private Role roleByRoleId;
-
-    public User() {
-    }
-
-    public User(String email, String name, String password, StreetName streetNameByStreetNameId, Role roleByRoleId) {
-        this.email = email;
-        this.name = name;
-        this.password = password;
-        this.streetNameByStreetNameId = streetNameByStreetNameId;
-        this.roleByRoleId = roleByRoleId;
-    }
 
     public int getId() {
         return id;

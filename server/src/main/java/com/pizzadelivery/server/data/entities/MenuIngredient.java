@@ -1,21 +1,24 @@
 package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "menu_ingredient", schema = "pizza_delivery", catalog = "")
 public class MenuIngredient {
     @EmbeddedId
     private MenuIngredientPK id;
+
+    @Positive
     @Basic
     @Column(name = "quantity", nullable = false)
-    private byte quantity;
+    private int quantity;
 
-    public byte getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(byte quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
@@ -42,5 +45,22 @@ public class MenuIngredient {
 
     public void setId(MenuIngredientPK id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MenuIngredient that = (MenuIngredient) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    public MenuIngredient() {
+        id = new MenuIngredientPK();
     }
 }

@@ -19,7 +19,7 @@ public class Edge {
     private int id;
     @Basic
     @Column(name = "vertex", nullable = false)
-    private byte vertex;
+    private int vertex;
     @Basic
     @Column(name = "edge_weight", nullable = false)
     private int edgeWeight;
@@ -40,11 +40,11 @@ public class Edge {
         this.id = id;
     }
 
-    public byte getVertex() {
+    public int getVertex() {
         return vertex;
     }
 
-    public void setVertex(byte vertex) {
+    public void setVertex(int vertex) {
         this.vertex = vertex;
     }
 

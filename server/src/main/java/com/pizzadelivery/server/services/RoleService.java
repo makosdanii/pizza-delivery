@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RoleService {
+public class RoleService implements ServiceORM<Role> {
     RoleRepository roleRepository;
 
     @Autowired
@@ -17,25 +17,24 @@ public class RoleService {
     }
 
     public Role createRole(Role role) throws AlreadyExistsException {
-        if (roleRepository.findByName(role.getName()).isEmpty()) {
-            return roleRepository.save(role);
-        }
-
-        throw new AlreadyExistsException();
+        checkConstraint(role, true);
+        role.setId(UNASSIGNED);
+        return roleRepository.save(role);
     }
 
     public Role findRole(int id) {
         return roleRepository.findById(id).orElse(new Role());
     }
 
-    public Role updateRole(int id, Role role) {
+    public Role updateRole(int id, Role role) throws AlreadyExistsException {
         Role old = roleRepository.findById(id).orElse(new Role());
-        if (old.getId() == 0) {
-            return old;
+        if (old.getId() != UNASSIGNED) {
+            checkConstraint(role, !old.getName().equals(role.getName()));
+            role.setId(id);
+            return roleRepository.save(role);
         }
 
-        role.setId(id);
-        return roleRepository.save(role);
+        return old;
     }
 
     public boolean deleteRole(int id) {
@@ -45,5 +44,12 @@ public class RoleService {
 
         roleRepository.deleteById(id);
         return true;
+    }
+
+    @Override
+    public void checkConstraint(Role role, boolean notExistYet) throws AlreadyExistsException {
+        if (notExistYet && !roleRepository.findByName(role.getName()).isEmpty()) {
+            throw new AlreadyExistsException();
+        }
     }
 }

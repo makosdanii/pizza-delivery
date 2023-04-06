@@ -1,26 +1,45 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.Collection;
 import java.util.Objects;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id",
+        scope = Car.class
+)
 @Entity
 public class Car {
+    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
     private int id;
     @Basic
+    @NotBlank
     @Column(name = "license", nullable = true, length = 16, unique = true)
     private String license;
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User userByUserId;
-    @OneToMany(mappedBy = "id.carByCarId")
+    @UniqueElements
+    @OneToMany(mappedBy = "id.carByCarId", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     private Collection<CarIngredient> carIngredientsById;
+    @UniqueElements
     @OneToMany(mappedBy = "carByCarId")
-    private Collection<FoodOrder> foodOrdersById;
+    private Collection<OrderDelivery> orderDeliveriesById;
 
     public int getId() {
         return id;
@@ -67,11 +86,11 @@ public class Car {
         this.carIngredientsById = carIngredientsById;
     }
 
-    public Collection<FoodOrder> getFoodOrdersById() {
-        return foodOrdersById;
+    public Collection<OrderDelivery> getOrderDeliveriesById() {
+        return orderDeliveriesById;
     }
 
-    public void setFoodOrdersById(Collection<FoodOrder> foodOrdersById) {
-        this.foodOrdersById = foodOrdersById;
+    public void setOrderDeliveriesById(Collection<OrderDelivery> foodOrdersById) {
+        this.orderDeliveriesById = foodOrdersById;
     }
 }
