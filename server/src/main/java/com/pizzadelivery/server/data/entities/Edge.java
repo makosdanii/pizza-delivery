@@ -3,16 +3,20 @@ package com.pizzadelivery.server.data.entities;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Objects;
 
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id",
-        scope = Edge.class)
+        scope = Edge.class
+)
 @Entity
-public class Edge {
+public class Edge implements Comparator<Edge> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -27,7 +31,8 @@ public class Edge {
     @ManyToOne
     @JoinColumn(name = "edge_name", referencedColumnName = "id", nullable = false)
     private StreetName streetNameByEdgeName;
-    @OneToMany(mappedBy = "id.edgeByEdgeId")
+    @OneToMany(mappedBy = "id.edgeByEdgeId", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     private Collection<Map> mapsById;
     @OneToMany(mappedBy = "id.edgeByNeighbourId")
     private Collection<Map> mapsById_0;
@@ -57,6 +62,17 @@ public class Edge {
     }
 
     @Override
+    public int compare(Edge node1, Edge node2) {
+        if (node1.edgeWeight < node2.edgeWeight)
+            return -1;
+
+        if (node1.edgeWeight > node2.edgeWeight)
+            return 1;
+
+        return 0;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -67,6 +83,17 @@ public class Edge {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public Edge clone() {
+        var clone = new Edge();
+        clone.setId(getId());
+        clone.setEdgeWeight(getEdgeWeight());
+        clone.setVertex(getVertex());
+        clone.setStreetNameByEdgeName(getStreetNameByEdgeName());
+        clone.setMapsById(getMapsById());
+
+        return clone;
     }
 
     public StreetName getStreetNameByEdgeName() {

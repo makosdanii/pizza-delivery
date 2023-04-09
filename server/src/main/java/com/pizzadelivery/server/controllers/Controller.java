@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+@org.springframework.stereotype.Controller
 public class Controller {
     @ExceptionHandler({ConstraintViolationException.class, MethodArgumentNotValidException.class,
             org.hibernate.exception.ConstraintViolationException.class})

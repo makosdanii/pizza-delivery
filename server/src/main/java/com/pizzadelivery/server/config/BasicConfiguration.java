@@ -70,7 +70,7 @@ public class BasicConfiguration {
     private static final RequestMatcher[] PUBLIC_URLS = {
             new AntPathRequestMatcher("/user/register"),
             new AntPathRequestMatcher("/authenticate"),
-            new AntPathRequestMatcher("/")
+            new AntPathRequestMatcher("/user/edges")
 
     };
 
