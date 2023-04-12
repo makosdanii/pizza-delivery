@@ -44,9 +44,12 @@ public class User {
     private Collection<FoodOrder> foodOrdersById;
 
     @ManyToOne
-    @NotNull
     @JoinColumn(name = "street_name_id", referencedColumnName = "id")
     private StreetName streetNameByStreetNameId;
+
+    @Basic
+    @Column(name = "house_no")
+    private int houseNo;
 
     @ManyToOne
     @NotNull
@@ -120,6 +123,14 @@ public class User {
 
     public void setStreetNameByStreetNameId(StreetName streetNameByStreetNameId) {
         this.streetNameByStreetNameId = streetNameByStreetNameId;
+    }
+
+    public int getHouseNo() {
+        return houseNo;
+    }
+
+    public void setHouseNo(int houseNo) {
+        this.houseNo = houseNo;
     }
 
     public Role getRoleByRoleId() {
