@@ -32,6 +32,10 @@ public class IngredientService implements ServiceORM<Ingredient> {
         return ingredientRepository.findById(id).orElse(new Ingredient());
     }
 
+    public Iterable<Ingredient> listAll() {
+        return ingredientRepository.findAll();
+    }
+
     public Ingredient updateIngredient(int id, Ingredient ingredient) throws AlreadyExistsException {
         Ingredient old = ingredientRepository.findById(id).orElse(new Ingredient());
         if (old.getId() != UNASSIGNED) {
@@ -57,7 +61,7 @@ public class IngredientService implements ServiceORM<Ingredient> {
             throw new AlreadyExistsException();
         }
 
-        if (!allergyRepository.existsById(ingredient.getAllergyByAllergyId().getId())) {
+        if (ingredient.getAllergyByAllergyId() != null && !allergyRepository.existsById(ingredient.getAllergyByAllergyId().getId())) {
             throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
         }
     }

@@ -1,11 +1,12 @@
 package com.pizzadelivery.server.data.entities;
 
-import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.Objects;
 
 @Entity
@@ -18,7 +19,7 @@ public class FoodOrder {
     @Basic
     @Column(name = "ordered_at", nullable = false)
     private Timestamp orderedAt;
-    @Null(groups = NonValidatedOnPersistTime.class)
+
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User userByUserId;
@@ -26,6 +27,11 @@ public class FoodOrder {
     @ManyToOne
     @JoinColumn(name = "menu_id", referencedColumnName = "id", nullable = false)
     private Menu menuByMenuId;
+
+    @JsonIgnore
+    @UniqueElements
+    @OneToMany(mappedBy = "id.foodOrderByFoodOrderId", orphanRemoval = true)
+    private Collection<OrderDelivery> orderDeliveriesById;
 
     public int getId() {
         return id;
@@ -70,5 +76,14 @@ public class FoodOrder {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public FoodOrder() {
+    }
+
+    // for testing
+    public FoodOrder(User userByUserId, Menu menuByMenuId) {
+        this.userByUserId = userByUserId;
+        this.menuByMenuId = menuByMenuId;
     }
 }

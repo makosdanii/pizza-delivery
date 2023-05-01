@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Null;
 
@@ -12,7 +13,7 @@ public class InventoryPK implements Serializable {
     @Basic
     @Column(name = "modified_at", nullable = false)
     private Timestamp modifiedAt;
-    @Null
+    @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
     private Car carByCarId;
@@ -48,5 +49,10 @@ public class InventoryPK implements Serializable {
 
     public InventoryPK() {
         modifiedAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    public InventoryPK(Car carByCarId) {
+        modifiedAt = new Timestamp(System.currentTimeMillis());
+        this.carByCarId = carByCarId;
     }
 }

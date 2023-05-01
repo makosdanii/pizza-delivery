@@ -26,6 +26,10 @@ public class AllergyService implements ServiceORM<Allergy> {
         return allergyRepository.findById(id).orElse(new Allergy());
     }
 
+    public Iterable<Allergy> listAll() {
+        return allergyRepository.findAll();
+    }
+
     public Allergy updateAllergy(int id, Allergy allergy) throws AlreadyExistsException {
         Allergy old = allergyRepository.findById(id).orElse(new Allergy());
         if (old.getId() != 0) {

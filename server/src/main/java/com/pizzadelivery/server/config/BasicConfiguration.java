@@ -32,9 +32,9 @@ import java.util.HexFormat;
 )
 public class BasicConfiguration {
 
-    private UserService userDetailsService;
-    private JwtEntryPoint jwtEntryPoint;
-    private JwtRequestFilter jwtRequestFilter;
+    private final UserService userDetailsService;
+    private final JwtEntryPoint jwtEntryPoint;
+    private final JwtRequestFilter jwtRequestFilter;
 
     @Autowired
     public BasicConfiguration(@Lazy UserService userDetailsService, JwtEntryPoint jwtEntryPoint, JwtRequestFilter jwtRequestFilter) {
@@ -70,8 +70,7 @@ public class BasicConfiguration {
     private static final RequestMatcher[] PUBLIC_URLS = {
             new AntPathRequestMatcher("/user/register"),
             new AntPathRequestMatcher("/authenticate"),
-            new AntPathRequestMatcher("/user/edges")
-
+            new AntPathRequestMatcher("/menu"),
     };
 
     @Bean

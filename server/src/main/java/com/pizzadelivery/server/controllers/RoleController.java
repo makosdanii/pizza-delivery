@@ -16,6 +16,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 @Validated
 @RestController
+@CrossOrigin
 @RequestMapping("/role")
 @PreAuthorize("hasAuthority('admin')")
 public class RoleController extends Controller {
@@ -31,6 +32,11 @@ public class RoleController extends Controller {
         Role role = roleService.findRole(id);
 
         return new ResponseEntity<>(role, role.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    }
+
+    @GetMapping
+    public Iterable<Role> listRole() {
+        return roleService.listAll();
     }
 
     @PostMapping("/add")

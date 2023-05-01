@@ -1,5 +1,7 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -11,7 +13,8 @@ import java.util.Objects;
 
 @Embeddable
 public class MenuIngredientPK implements Serializable {
-    @Null
+    @JsonBackReference
+    @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "menu_id", referencedColumnName = "id", nullable = false)
     private Menu menuByMenuId;
@@ -47,6 +50,14 @@ public class MenuIngredientPK implements Serializable {
     }
 
     public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
+        this.ingredientByIngredientId = ingredientByIngredientId;
+    }
+
+    public MenuIngredientPK() {
+    }
+
+    public MenuIngredientPK(Menu menuByMenuId, Ingredient ingredientByIngredientId) {
+        this.menuByMenuId = menuByMenuId;
         this.ingredientByIngredientId = ingredientByIngredientId;
     }
 }

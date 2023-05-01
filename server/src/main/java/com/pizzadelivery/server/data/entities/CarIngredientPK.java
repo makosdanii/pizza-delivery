@@ -1,28 +1,29 @@
 package com.pizzadelivery.server.data.entities;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Null;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.Objects;
 
 @Embeddable
 public class CarIngredientPK implements Serializable {
-    @Basic
-    @Column(name = "modified_at", nullable = false)
-    private Timestamp modifiedAt;
-    @Null
+    //    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
+    private Ingredient ingredientByIngredientId;
+    //    @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
     private Car carByCarId;
 
-    public Timestamp getModifiedAt() {
-        return modifiedAt;
+    public Ingredient getIngredientByIngredientId() {
+        return ingredientByIngredientId;
     }
 
-    public void setModifiedAt(Timestamp modifiedAt) {
-        this.modifiedAt = modifiedAt;
+    public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
+        this.ingredientByIngredientId = ingredientByIngredientId;
     }
 
     public Car getCarByCarId() {
@@ -38,15 +39,19 @@ public class CarIngredientPK implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CarIngredientPK that = (CarIngredientPK) o;
-        return Objects.equals(modifiedAt, that.modifiedAt);
+        return this.carByCarId.equals(that.getCarByCarId())
+                && this.ingredientByIngredientId.equals(that.getIngredientByIngredientId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(modifiedAt);
+        return Objects.hash(carByCarId, ingredientByIngredientId);
     }
 
     public CarIngredientPK() {
-        modifiedAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    public CarIngredientPK(Ingredient ingredientByIngredientId) {
+        this.ingredientByIngredientId = ingredientByIngredientId;
     }
 }

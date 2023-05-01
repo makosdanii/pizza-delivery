@@ -1,16 +1,11 @@
 package com.pizzadelivery.server.data.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.Collection;
 import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id",
-        scope = StreetName.class)
 @Entity
 @Table(name = "street_name", schema = "pizza_delivery", catalog = "")
 public class StreetName {
@@ -24,7 +19,7 @@ public class StreetName {
     @Basic
     @Column(name = "until_no", nullable = false)
     private int untilNo;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "streetNameByEdgeName")
     private Collection<Edge> edgesById;
 
@@ -71,5 +66,13 @@ public class StreetName {
 
     public void setEdgesById(Collection<Edge> edgesById) {
         this.edgesById = edgesById;
+    }
+
+    public StreetName() {
+    }
+
+    public StreetName(int id, String that) {
+        this.id = id;
+        this.that = that;
     }
 }

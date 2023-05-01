@@ -2,14 +2,12 @@ package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 
 import java.util.Objects;
 
 @Entity
 public class Ingredient {
-    @Null
+    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -19,7 +17,6 @@ public class Ingredient {
     @Column(name = "name", nullable = false, length = 64)
     private String name;
     @ManyToOne
-    @NotNull
     @JoinColumn(name = "allergy_id", referencedColumnName = "id")
     private Allergy allergyByAllergyId;
 
@@ -57,6 +54,24 @@ public class Ingredient {
     }
 
     public void setAllergyByAllergyId(Allergy allergyByAllergyId) {
+        this.allergyByAllergyId = allergyByAllergyId;
+    }
+
+    public Ingredient() {
+    }
+
+    // for testing
+    public Ingredient(String name) {
+        this.name = name;
+    }
+
+    public Ingredient(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Ingredient(String name, Allergy allergyByAllergyId) {
+        this.name = name;
         this.allergyByAllergyId = allergyByAllergyId;
     }
 }

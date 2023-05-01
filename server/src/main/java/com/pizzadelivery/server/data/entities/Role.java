@@ -1,21 +1,14 @@
 package com.pizzadelivery.server.data.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Null;
 
 import java.util.Collection;
 import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id",
-        scope = Role.class)
 @Entity
 public class Role {
-    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -24,7 +17,7 @@ public class Role {
     @NotBlank
     @Column(name = "name", nullable = false, length = 64)
     private String name;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "roleByRoleId")
     private Collection<User> usersById;
 
@@ -63,5 +56,18 @@ public class Role {
 
     public void setUsersById(Collection<User> usersById) {
         this.usersById = usersById;
+    }
+
+    public Role() {
+    }
+
+    // for testing
+    public Role(String name) {
+        this.name = name;
+    }
+
+    public Role(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 }

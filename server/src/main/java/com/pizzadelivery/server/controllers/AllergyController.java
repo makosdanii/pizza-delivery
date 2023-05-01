@@ -16,6 +16,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 @Validated
 @RestController
+@CrossOrigin
 @RequestMapping("/allergy")
 @PreAuthorize("hasAnyAuthority('admin', 'chef')")
 public class AllergyController extends Controller {
@@ -31,6 +32,11 @@ public class AllergyController extends Controller {
         Allergy allergy = allergyService.findAllergy(id);
 
         return new ResponseEntity<>(allergy, allergy.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    }
+
+    @GetMapping
+    public Iterable<Allergy> listAllergy() {
+        return allergyService.listAll();
     }
 
     @PostMapping("/add")

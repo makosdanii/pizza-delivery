@@ -12,4 +12,6 @@ public interface CarRepository extends CrudRepository<Car, Integer> {
     public List<Car> findByLicense(String license);
 
     public List<Car> findByUserByUserId(User user);
+
+    public List<Car> findAll();
 }

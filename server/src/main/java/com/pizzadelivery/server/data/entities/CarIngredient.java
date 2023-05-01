@@ -1,24 +1,16 @@
 package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.Range;
-
-import java.sql.Timestamp;
 
 @Entity
 @Table(name = "car_ingredient", schema = "pizza_delivery", catalog = "")
 public class CarIngredient {
     @EmbeddedId
     private CarIngredientPK id;
-    @Range(min = 0, max = 100)
+    //    @Positive
     @Basic
-    @Column(name = "current_percent", nullable = false)
-    private int currentPercent;
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
-    private Ingredient ingredientByIngredientId;
+    @Column(name = "current_quantity", nullable = false)
+    private int currentQuantity;
 
     public CarIngredientPK getId() {
         return id;
@@ -28,28 +20,20 @@ public class CarIngredient {
         this.id = id;
     }
 
-    public int getCurrentPercent() {
-        return currentPercent;
+    public int getCurrentQuantity() {
+        return currentQuantity;
     }
 
-    public void setCurrentPercent(int currentPercent) {
-        this.currentPercent = currentPercent;
+    public void setCurrentQuantity(int currentPercent) {
+        this.currentQuantity = currentPercent;
     }
 
     public Ingredient getIngredientByIngredientId() {
-        return ingredientByIngredientId;
+        return id.getIngredientByIngredientId();
     }
 
     public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
-        this.ingredientByIngredientId = ingredientByIngredientId;
-    }
-
-    public Timestamp getModifiedAt() {
-        return id.getModifiedAt();
-    }
-
-    public void setModifiedAt(Timestamp modifiedAt) {
-        id.setModifiedAt(modifiedAt);
+        id.setIngredientByIngredientId(ingredientByIngredientId);
     }
 
     public Car getCarByCarId() {
@@ -62,5 +46,16 @@ public class CarIngredient {
 
     public CarIngredient() {
         this.id = new CarIngredientPK();
+    }
+
+    public CarIngredient(int currentQuantity, Ingredient ingredientByIngredientId) {
+        this.id = new CarIngredientPK(ingredientByIngredientId);
+        this.currentQuantity = currentQuantity;
+    }
+
+    public CarIngredient(int currentQuantity, Ingredient ingredientByIngredientId, Car carByCarId) {
+        this.id = new CarIngredientPK(ingredientByIngredientId);
+        id.setCarByCarId(carByCarId);
+        this.currentQuantity = currentQuantity;
     }
 }

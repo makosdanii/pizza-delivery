@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -8,6 +9,7 @@ import java.sql.Timestamp;
 
 @Entity
 public class Inventory {
+    @JsonIgnore
     @EmbeddedId
     private InventoryPK id;
     @PositiveOrZero
@@ -18,7 +20,6 @@ public class Inventory {
     @Basic
     @Column(name = "current_qt", nullable = false)
     private int currentQt;
-
     @ManyToOne
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;
@@ -39,11 +40,11 @@ public class Inventory {
         this.expense = expense;
     }
 
-    public int getCurrentQt() {
+    public int getQuantity() {
         return currentQt;
     }
 
-    public void setCurrentQt(int currentQt) {
+    public void setQuantity(int currentQt) {
         this.currentQt = currentQt;
     }
 
@@ -73,5 +74,19 @@ public class Inventory {
 
     public Inventory() {
         id = new InventoryPK();
+    }
+
+    public Inventory(Integer expense, int currentQt, Ingredient ingredientByIngredientId) {
+        id = new InventoryPK();
+        this.expense = expense;
+        this.currentQt = currentQt;
+        this.ingredientByIngredientId = ingredientByIngredientId;
+    }
+
+    public Inventory(Car carByCarId, Integer expense, int currentQt, Ingredient ingredientByIngredientId) {
+        this.id = new InventoryPK(carByCarId);
+        this.expense = expense;
+        this.currentQt = currentQt;
+        this.ingredientByIngredientId = ingredientByIngredientId;
     }
 }

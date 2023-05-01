@@ -1,25 +1,16 @@
 package com.pizzadelivery.server.data.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
 import java.util.Collection;
 import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id",
-        scope = User.class)
 @Entity
 public class User {
-    @Null
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -37,20 +28,18 @@ public class User {
     @NotBlank
     @Column(name = "password", nullable = false, length = 128)
     private String password;
+    @JsonIgnore
     @OneToMany(mappedBy = "userByUserId")
     private Collection<Car> carsById;
-    @OneToMany(mappedBy = "userByUserId", fetch = FetchType.EAGER)
-    @Fetch(FetchMode.SELECT)
+    @JsonIgnore
+    @OneToMany(mappedBy = "userByUserId")
     private Collection<FoodOrder> foodOrdersById;
-
     @ManyToOne
     @JoinColumn(name = "street_name_id", referencedColumnName = "id")
     private StreetName streetNameByStreetNameId;
-
     @Basic
     @Column(name = "house_no")
     private int houseNo;
-
     @ManyToOne
     @NotNull
     @JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false)
@@ -139,5 +128,37 @@ public class User {
 
     public void setRoleByRoleId(Role roleByRoleId) {
         this.roleByRoleId = roleByRoleId;
+    }
+
+    public User() {
+    }
+
+    // for testing
+    public User(int id, String email) {
+        this.id = id;
+        this.email = email;
+    }
+
+    public User(String email, String name, String password, Role roleByRoleId) {
+        this.email = email;
+        this.name = name;
+        this.password = password;
+        this.roleByRoleId = roleByRoleId;
+    }
+
+    public User(String email, String name, String password, StreetName streetNameByStreetNameId, int houseNo, Role roleByRoleId) {
+        this.email = email;
+        this.name = name;
+        this.password = password;
+        this.streetNameByStreetNameId = streetNameByStreetNameId;
+        this.houseNo = houseNo;
+        this.roleByRoleId = roleByRoleId;
+    }
+
+    public User(int id, String email, StreetName streetNameByStreetNameId, int houseNo) {
+        this.id = id;
+        this.email = email;
+        this.streetNameByStreetNameId = streetNameByStreetNameId;
+        this.houseNo = houseNo;
     }
 }

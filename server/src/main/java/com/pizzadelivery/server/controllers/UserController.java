@@ -5,7 +5,6 @@ import com.pizzadelivery.server.data.entities.User;
 import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.RoleService;
-import com.pizzadelivery.server.services.StreetService;
 import com.pizzadelivery.server.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -17,20 +16,21 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 @Validated
 @RestController
+@CrossOrigin
 @RequestMapping(path = "/user")
 public class UserController extends Controller {
     private UserService userService;
-    private StreetService streetService;
     private RoleService roleService;
 
     @Autowired
-    public UserController(UserService userService, StreetService streetService, RoleService roleService) {
+    public UserController(UserService userService, RoleService roleService) {
         this.userService = userService;
-        this.streetService = streetService;
         this.roleService = roleService;
     }
 
@@ -42,8 +42,14 @@ public class UserController extends Controller {
         return new ResponseEntity<>(user, user.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('admin')")
+    @GetMapping
+    public Iterable<User> listUser() {
+        return userService.listAll();
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody @Valid User user) {
+    public ResponseEntity<User> registerUser(@RequestBody @Validated(NonValidatedOnPersistTime.class) User user) {
         try {
             user = userService.createUser(user);
         } catch (AlreadyExistsException e) {
@@ -72,8 +78,9 @@ public class UserController extends Controller {
 
     @PreAuthorize("principal.getId() == #id")
     @PostMapping("/{id}/order")
-    public ResponseEntity<FoodOrder> placeOrder(@PathVariable @Positive @P("id") int id,
-                                                @RequestBody @Validated(NonValidatedOnPersistTime.class) FoodOrder foodOrder) {
-        return new ResponseEntity<>(userService.placeOrder(id, foodOrder), HttpStatus.CREATED);
+    public ResponseEntity<Integer> placeOrder(@PathVariable @Positive @P("id") int id,
+                                              @RequestBody @Validated(NonValidatedOnPersistTime.class) List<FoodOrder> foodOrders) {
+        var order = userService.placeOrder(id, foodOrders);
+        return new ResponseEntity<>(order, order == 1 ? HttpStatus.CREATED : HttpStatus.OK);
     }
 }

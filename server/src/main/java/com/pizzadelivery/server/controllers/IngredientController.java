@@ -16,6 +16,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 @Validated
 @RestController
+@CrossOrigin
 @RequestMapping("/ingredient")
 @PreAuthorize("hasAnyAuthority('admin', 'chef')")
 public class IngredientController extends Controller {
@@ -31,6 +32,11 @@ public class IngredientController extends Controller {
         Ingredient ingredient = ingredientService.findIngredient(id);
 
         return new ResponseEntity<>(ingredient, ingredient.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    }
+
+    @GetMapping
+    public Iterable<Ingredient> listIngredient() {
+        return ingredientService.listAll();
     }
 
     @PostMapping("/add")

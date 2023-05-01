@@ -26,6 +26,10 @@ public class RoleService implements ServiceORM<Role> {
         return roleRepository.findById(id).orElse(new Role());
     }
 
+    public Iterable<Role> listAll() {
+        return roleRepository.findAll();
+    }
+
     public Role updateRole(int id, Role role) throws AlreadyExistsException {
         Role old = roleRepository.findById(id).orElse(new Role());
         if (old.getId() != UNASSIGNED) {
@@ -38,7 +42,7 @@ public class RoleService implements ServiceORM<Role> {
     }
 
     public boolean deleteRole(int id) {
-        if (!roleRepository.existsById(id)) {
+        if (!roleRepository.existsById(id) || roleRepository.findById(id).get().getName().equals("admin")) {
             return false;
         }
 

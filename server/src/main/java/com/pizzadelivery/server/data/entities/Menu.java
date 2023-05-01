@@ -1,26 +1,17 @@
 package com.pizzadelivery.server.data.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Positive;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.Collection;
 import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id",
-        scope = Menu.class
-)
 @Entity
 public class Menu {
-    @Null
+    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -33,9 +24,9 @@ public class Menu {
     @Basic
     @Column(name = "price", nullable = false)
     private int price;
+    @JsonManagedReference
     @UniqueElements
-    @OneToMany(mappedBy = "id.menuByMenuId", fetch = FetchType.EAGER)
-    @Fetch(FetchMode.SELECT)
+    @OneToMany(mappedBy = "id.menuByMenuId")
     private Collection<MenuIngredient> menuIngredientsById;
 
     public int getId() {
@@ -81,5 +72,19 @@ public class Menu {
 
     public void setMenuIngredientsById(Collection<MenuIngredient> menuIngredientsById) {
         this.menuIngredientsById = menuIngredientsById;
+    }
+
+    public Menu() {
+    }
+
+    // for testing
+    public Menu(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public Menu(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 }

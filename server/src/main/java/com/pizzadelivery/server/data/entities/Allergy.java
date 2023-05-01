@@ -2,13 +2,12 @@ package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Null;
 
 import java.util.Objects;
 
 @Entity
 public class Allergy {
-    @Null
+    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)

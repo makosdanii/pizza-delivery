@@ -1,14 +1,16 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "menu_ingredient", schema = "pizza_delivery", catalog = "")
 public class MenuIngredient {
+    @JsonIgnore
     @EmbeddedId
     private MenuIngredientPK id;
-
     @Positive
     @Basic
     @Column(name = "quantity", nullable = false)
@@ -22,7 +24,7 @@ public class MenuIngredient {
         this.quantity = quantity;
     }
 
-
+    @JsonBackReference
     public Menu getMenuByMenuId() {
         return id.getMenuByMenuId();
     }
@@ -62,5 +64,12 @@ public class MenuIngredient {
 
     public MenuIngredient() {
         id = new MenuIngredientPK();
+    }
+
+    // for testing
+    public MenuIngredient(Ingredient ingredient, int quantity) {
+        this.id = new MenuIngredientPK();
+        setIngredientByIngredientId(ingredient);
+        this.quantity = quantity;
     }
 }

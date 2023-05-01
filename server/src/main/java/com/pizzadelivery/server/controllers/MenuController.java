@@ -17,6 +17,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 @Validated
 @RestController
+@CrossOrigin
 @RequestMapping("/menu")
 public class MenuController extends Controller {
     private MenuService menuService;
@@ -26,12 +27,16 @@ public class MenuController extends Controller {
         this.menuService = menuService;
     }
 
-    @PreAuthorize("hasAnyAuthority('admin', 'chef', 'customer', 'driver')")
     @GetMapping("/{id}")
     public ResponseEntity<Menu> findMenu(@PathVariable @Positive int id) {
         Menu menu = menuService.findMenu(id);
 
         return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    }
+
+    @GetMapping
+    public Iterable<Menu> listMenu() {
+        return menuService.listAll();
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
@@ -46,17 +51,17 @@ public class MenuController extends Controller {
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
-    @PostMapping("/{id}/ingredient")
+    @PostMapping("/{id}")
     public ResponseEntity<Menu> assignIngredient(@PathVariable @Positive int id, @RequestBody @Valid MenuIngredient menuIngredient) {
         Menu menu = menuService.assignIngredient(id, menuIngredient);
         return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
-    @DeleteMapping("/{id}/ingredient")
-    public ResponseEntity<Menu> unAssignIngredient(@PathVariable @Positive int id, @RequestBody @Valid MenuIngredient menuIngredient) {
-        Menu menu = menuService.unAssignIngredient(id, menuIngredient);
-        return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
+    @DeleteMapping("/{id}/{ingredientId}")
+    public ResponseEntity<Menu> unAssignIngredient(@PathVariable @Positive int id, @PathVariable @Positive int ingredientId) {
+        Menu menu = menuService.unAssignIngredient(id, ingredientId);
+        return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")

@@ -49,4 +49,9 @@ public class OrderDeliveryPK implements Serializable {
     public OrderDeliveryPK() {
         deliveredAt = new Timestamp(System.currentTimeMillis());
     }
+
+    public OrderDeliveryPK(FoodOrder foodOrderByFoodOrderId) {
+        deliveredAt = new Timestamp(System.currentTimeMillis());
+        this.foodOrderByFoodOrderId = foodOrderByFoodOrderId;
+    }
 }

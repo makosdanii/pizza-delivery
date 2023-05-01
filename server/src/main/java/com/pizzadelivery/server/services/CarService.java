@@ -2,18 +2,24 @@ package com.pizzadelivery.server.services;
 
 
 import com.pizzadelivery.server.config.UserAuthorizationDetails;
-import com.pizzadelivery.server.data.entities.*;
+import com.pizzadelivery.server.data.entities.Car;
+import com.pizzadelivery.server.data.entities.CarIngredient;
+import com.pizzadelivery.server.data.entities.Inventory;
+import com.pizzadelivery.server.data.entities.OrderDelivery;
 import com.pizzadelivery.server.data.repositories.*;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+
+import static com.pizzadelivery.server.utils.Dispatcher.CAR_CAPACITY;
+import static java.lang.Thread.sleep;
 
 @Service
 public class CarService implements ServiceORM<Car> {
@@ -24,6 +30,7 @@ public class CarService implements ServiceORM<Car> {
     CarIngredientRepository carIngredientRepository;
     FoodOrderRepository foodOrderRepository;
     OrderDeliveryRepository orderDeliveryRepository;
+    InventoryService inventoryService;
 
     @Autowired
     public CarService(CarRepository carRepository,
@@ -32,7 +39,8 @@ public class CarService implements ServiceORM<Car> {
                       IngredientRepository ingredientRepository,
                       CarIngredientRepository carIngredientRepository,
                       FoodOrderRepository foodOrderRepository,
-                      OrderDeliveryRepository orderDeliveryRepository) {
+                      OrderDeliveryRepository orderDeliveryRepository,
+                      InventoryService inventoryService) {
         this.carRepository = carRepository;
         this.userRepository = userRepository;
         this.inventoryRepository = inventoryRepository;
@@ -40,6 +48,7 @@ public class CarService implements ServiceORM<Car> {
         this.carIngredientRepository = carIngredientRepository;
         this.foodOrderRepository = foodOrderRepository;
         this.orderDeliveryRepository = orderDeliveryRepository;
+        this.inventoryService = inventoryService;
     }
 
     public Car createCar(Car car) throws AlreadyExistsException {
@@ -52,8 +61,26 @@ public class CarService implements ServiceORM<Car> {
         return carRepository.findById(id);
     }
 
+    public Iterable<Car> listAll() {
+        return carRepository.findAll();
+    }
+
     public Car updateCar(int id, Car car) throws AlreadyExistsException {
         Car old = carRepository.findById(id).orElse(new Car());
+        var authenticated = Optional.ofNullable(SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal());
+
+        if (!authenticated.isEmpty()) {
+            // only admin can update license plate
+            if (!((UserAuthorizationDetails) authenticated.get()).getAuthorities()
+                    .contains(new SimpleGrantedAuthority("admin")))
+                car.setLicense(old.getLicense());
+
+            if (old.getUserByUserId() != null && !isAuthorizedForCar(old) ||
+                    car.getUserByUserId() != null && !isAuthorizedForCar(car))
+                throw new ConstraintViolationException("Only admin or driver can assign people", new HashSet<>());
+        }
+
         if (old.getId() != UNASSIGNED) {
             checkConstraint(car, !old.getLicense().equals(car.getLicense()));
             car.setId(id);
@@ -72,114 +99,74 @@ public class CarService implements ServiceORM<Car> {
         return true;
     }
 
-    public Inventory modifyInventory(Inventory inventory) {
-        User user = userRepository
-                .findById(((UserAuthorizationDetails) SecurityContextHolder
-                        .getContext().getAuthentication().getPrincipal())
-                        .getId()).get();
-        List<Car> cars = carRepository.findByUserByUserId(user);
-
-        //admin is a good guy so he can borrow car
-        if (cars.isEmpty() && user.getRoleByRoleId().getName().equals("admin")) {
-            inventory.setCarByCarId(carRepository.findById(1)
-                    .orElseThrow(() -> new ConstraintViolationException("No available car", new HashSet<>())));
-        } else if (cars.isEmpty()) {
-            throw new ConstraintViolationException("Authorized driver has no car", new HashSet<>());
-        }
-
-        inventory.setCarByCarId(cars.get(0));
-
-        if (ingredientRepository.existsById(inventory.getIngredientByIngredientId().getId())) {
-            int lastQuantity = 0;
-            List<Inventory> records;
-
-            //check if any record of the ingredient is present
-            if (!(records = inventoryRepository
-                    .findByIngredientByIngredientId(inventory.getIngredientByIngredientId(),
-                            Sort.by(Sort.Direction.DESC, "id.modifiedAt"))).isEmpty())
-                lastQuantity = records.get(0).getCurrentQt();
-
-            //expense is always null if inventory Qt is getting reduced
-            if (inventory.getExpense() == 0 && lastQuantity < inventory.getCurrentQt())
-                throw new ConstraintViolationException("Calculated current quantity cannot be negative", new HashSet<>());
-
-            inventory.setCurrentQt(inventory.getExpense() > 0 ?
-                    lastQuantity + inventory.getCurrentQt() :
-                    lastQuantity - inventory.getCurrentQt());
-
-            return inventoryRepository.save(inventory);
-        }
-
-        throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
-    }
-
-    public Car fillIngredient(int id, CarIngredient carIngredient) {
+    public void modifyCarIngredient(int id, CarIngredient carIngredient) {
         carIngredient.setCarByCarId(carRepository.findById(id).get());
-        if (ingredientRepository.existsById(carIngredient.getIngredientByIngredientId().getId())) {
-            Integer lastPercentile = 0;
-            List<CarIngredient> records;
-
-            //check if any record of the ingredient is present
-            if (!(records = carIngredientRepository
-                    .findAllByIdCarByCarIdAndIngredientByIngredientId(
-                            carIngredient.getCarByCarId(),
-                            carIngredient.getIngredientByIngredientId(),
-                            Sort.by(Sort.Direction.DESC, "id.modifiedAt"))).isEmpty())
-                lastPercentile = records.get(0).getCurrentPercent();
-
-            if (lastPercentile + carIngredient.getCurrentPercent() > 100)
-                throw new ConstraintViolationException("Calculated current percentile cannot be more than 100", new HashSet<>());
-
-            carIngredient.setCurrentPercent(lastPercentile + carIngredient.getCurrentPercent());
+        if (!ingredientRepository.existsById(carIngredient.getIngredientByIngredientId().getId())) {
+            throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
+        } else {
             carIngredientRepository.save(carIngredient);
-
-            return carIngredient.getCarByCarId();
-
+            carRepository.findById(id).get();
         }
-        throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
 
     }
 
-    public Car depleteIngredient(int id, CarIngredient carIngredient) {
-        carIngredient.setCarByCarId(carRepository.findById(id)
-                .orElseThrow(() -> new ConstraintViolationException("Invalid ID constraint", new HashSet<>()))
-        );
+    public Car fillCarIngredients(int carId) {
+        var car = carRepository.findById(carId).orElseThrow();
+        ingredientRepository.findAll().forEach(ingredient -> {
+            var corresponding = car.getCarIngredientsById().stream()
+                    .filter(carIngredient -> carIngredient.getIngredientByIngredientId().equals(ingredient)).findFirst()
+                    .orElse(new CarIngredient(0, ingredient, car));
 
-        if (ingredientRepository.existsById(carIngredient.getIngredientByIngredientId().getId())) {
-            Integer lastPercentile = 0;
-            List<CarIngredient> records;
-
-            //check if any record of the ingredient is present
-            if (!(records = carIngredientRepository
-                    .findAllByIdCarByCarIdAndIngredientByIngredientId(
-                            carIngredient.getCarByCarId(),
-                            carIngredient.getIngredientByIngredientId(),
-                            Sort.by(Sort.Direction.DESC, "id.modifiedAt"))).isEmpty())
-                lastPercentile = records.get(0).getCurrentPercent();
-
-            if (lastPercentile < carIngredient.getCurrentPercent())
-                throw new ConstraintViolationException("Calculated current percentile cannot be negative", new HashSet<>());
-
-            carIngredient.setCurrentPercent(lastPercentile - carIngredient.getCurrentPercent());
-            carIngredientRepository.save(carIngredient);
-
-            return carIngredient.getCarByCarId();
-
-        }
-        throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
+            int deficit = CAR_CAPACITY - corresponding.getCurrentQuantity();
+            if (deficit > 0) {
+                inventoryService.modifyInventory(new Inventory(car, 0,
+                        deficit, ingredient), false);
+                corresponding.setCurrentQuantity(CAR_CAPACITY);
+                carIngredientRepository.save(corresponding);
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        return car;
     }
 
-    public Car deliverOrder(int id, OrderDelivery orderDelivery) {
+    public void depotCarIngredients(int carId) {
+        carRepository.findById(carId).orElseThrow().getCarIngredientsById().forEach(carIngredient -> {
+            if (carIngredient.getCurrentQuantity() > 0) {
+                inventoryService.modifyInventory(new Inventory(carIngredient.getCarByCarId(), 0,
+                        carIngredient.getCurrentQuantity(), carIngredient.getIngredientByIngredientId()), true);
+                carIngredient.setCurrentQuantity(0);
+                carIngredientRepository.save(carIngredient);
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    public Car deliverOrders(int id, List<OrderDelivery> orderDeliveries) {
         var car = carRepository.findById(id)
                 .orElseThrow(() -> new ConstraintViolationException("Invalid ID constraint", new HashSet<>()));
+        orderDeliveries.forEach(orderDelivery -> {
+            if (!foodOrderRepository.existsById(orderDelivery.getFoodOrderByFoodOrderId().getId())) {
+                throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
+            } else {
+                orderDelivery.setCarByCarId(car);
+                orderDeliveryRepository.save(orderDelivery);
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
-        if (foodOrderRepository.existsById(orderDelivery.getFoodOrderByFoodOrderId().getId())) {
-            orderDelivery.setCarByCarId(car);
-            orderDeliveryRepository.save(orderDelivery);
-            return car;
-        }
-
-        throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
+        });
+        return car;
     }
 
     @Override
@@ -188,9 +175,20 @@ public class CarService implements ServiceORM<Car> {
             throw new AlreadyExistsException();
         }
 
+        if (car.getUserByUserId() == null) return;
+
         var user = userRepository.findById(car.getUserByUserId().getId());
-        if (user.isEmpty() || !user.get().getRoleByRoleId().getName().equals("driver")) {
+
+        if (!user.isPresent() || !user.get().getRoleByRoleId().getName().equals("driver")) {
             throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
         }
     }
+
+    private boolean isAuthorizedForCar(Car car) {
+        UserAuthorizationDetails authenticated = (UserAuthorizationDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return authenticated.getAuthorities().contains(new SimpleGrantedAuthority("admin"))
+                || car.getUserByUserId().getId() == authenticated.getId();
+    }
+
 }

@@ -1,38 +1,62 @@
 package com.pizzadelivery.server.utils;
 
+import com.pizzadelivery.server.data.entities.Car;
 import com.pizzadelivery.server.data.entities.Edge;
 import com.pizzadelivery.server.services.EdgeService;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class Navigation {
     List<ArrayList<Edge>> graph;
     Edge[] edges;
+    Map<Car, Edge[]> routes = new HashMap<>();
 
     public Navigation(EdgeService edgeService) {
-        graph = edgeService.loadGraph().stream().sorted(new Comparator<ArrayList<Edge>>() {
-            @Override
-            public int compare(ArrayList<Edge> o1, ArrayList<Edge> o2) {
-                if (o1.get(0).getId() < o2.get(0).getId())
-                    return -1;
-
-                if (o1.get(0).getId() > o2.get(0).getId())
-                    return 1;
-
-                return 0;
-            }
-        }).toList();
+        graph = edgeService.loadGraph();
         edges = graph.stream().map(list -> list.get(0)).toArray(Edge[]::new);
     }
 
-    public ArrayList<Edge> dijkstraShortestPath(Edge current, Edge target) throws Exception {
+    // for testing
+    public List<ArrayList<Edge>> getGraph() {
+        return graph;
+    }
+
+    // for testing
+    public void setGraph(List<ArrayList<Edge>> graph) {
+        this.graph = graph;
+        edges = graph.stream().map(list -> list.get(0)).toArray(Edge[]::new);
+    }
+
+    public int getDistance(Car fromItsPosition) {
+        return Arrays.stream(routes.get(fromItsPosition))
+                .reduce(0, (acc, curr) -> acc + curr.getEdgeWeight(), Integer::sum);
+    }
+
+    public Edge[] getRoute(Car fromItsPosition) {
+        return routes.get(fromItsPosition);
+    }
+
+    public int getHistory() {
+        return routes.size();
+    }
+
+    public void clearHistory() {
+        this.routes.clear();
+    }
+
+    public Integer navigate(Car car, Edge current, Edge target) throws Exception {
+        var result = dijkstraShortestPath(current, target);
+        routes.put(car.clone(), result);
+
+        return Arrays.stream(result).reduce(0, (acc, curr) -> acc + curr.getEdgeWeight(), Integer::sum);
+    }
+
+    // public for testing only
+    public Edge[] dijkstraShortestPath(Edge current, Edge target) throws Exception {
         if (graph == null) throw new Exception("Unloaded graph");
 
-        int distance[] = new int[edges.length];
-        int parent[] = new int[edges.length];
+        int[] distance = new int[edges.length];
+        int[] parent = new int[edges.length];
         for (int j = 0; j < edges.length; j++) {
             distance[j] = Integer.MAX_VALUE;
             parent[j] = 0;
@@ -70,18 +94,20 @@ public class Navigation {
         }
 
         ArrayList<Edge> path = new ArrayList<>();
-        navigate(parent, path, current.getId(), target.getId() - 1);
-
-        return path;
+        assemble(parent, path, current.getId(), target.getId() - 1);
+        if (current != target)
+            path.add(target);
+        return path.toArray(Edge[]::new);
     }
 
-    private void navigate(int[] parentNodes, ArrayList<Edge> path, int from, int to) {
+    private void assemble(int[] parentNodes, ArrayList<Edge> path, int from, int to) {
         Edge node = edges[parentNodes[to]];
         if (node.getId() == from) {
+            path.add(node);
             return;
         }
 
-        navigate(parentNodes, path, from, node.getId() - 1);
+        assemble(parentNodes, path, from, node.getId() - 1);
         path.add(node);
     }
 }

@@ -1,9 +1,10 @@
-const token = ""
-const url = "https://api.mapbox.com/datasets/v1/makosdanii/clgapu42b0wf32bpdpwzjvwwu/features?access_token=" + token
-const url2 = "https://api.mapbox.com/datasets/v1/makosdanii/clgb4eeme00ka2oqkh6n0mq1i/features?access_token=" + token
-const axios = require('axios');
+const token = "pk.eyJ1IjoibWFrb3NkYW5paSIsImEiOiJjbGdhb21hNHQxMndwM2xwaWUxOXY0bGU5In0.QCQaAMl0L4JC4gkOyTBzAg"
+const url = "https://api.mapbox.com/datasets/v1/makosdanii/clgb4eeme00ka2oqkh6n0mq1i/features?access_token=" + token
+const axios = require('axios')
 
-
+console.log("delete from map where true;")
+console.log("delete from edge where true;")
+console.log("delete from street_name where true;")
 const normalizeStreets = (arr) => {
     let streetNames = [];
     let foreignKeyCol = [];
@@ -69,17 +70,14 @@ const insertIntoMap = (arr) => {
     console.log(`(${id}, ${adjs[adjs.length - 1].trim()});`)
 }
 
-axios.get(url2).then(resp2 => {
-    axios.get(url).then(resp => {
-        const data2 = Object.values(resp2.data.features).map(obj => obj.properties);
-        let data = data2.concat(Object.values(resp.data.features).map(obj => obj.properties));
-        data = data.sort((a, b) => a.id - b.id)
+axios.get(url).then(resp => {
+    let data = Object.values(resp.data.features).map(obj => obj.properties);
+    data = data.sort((a, b) => a.id - b.id)
 
-        const streetNames = normalizeStreets(data)
-        // console.log(streetNames)
-        // console.log(data)
-        insertIntoStreetName(streetNames)
-        insertIntoEdge(data, streetNames)
-        insertIntoMap(data)
-    });
-});
+    const streetNames = normalizeStreets(data)
+    // console.log(streetNames)
+    // console.log(data)
+    insertIntoStreetName(streetNames)
+    insertIntoEdge(data, streetNames)
+    insertIntoMap(data)
+})

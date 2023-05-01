@@ -1,5 +1,7 @@
 package com.pizzadelivery.server.data.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
@@ -10,9 +12,11 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "order_delivery", schema = "pizza_delivery", catalog = "")
 public class OrderDelivery {
+    @JsonIgnore
     @Valid
     @EmbeddedId
     OrderDeliveryPK id;
+    @JsonBackReference
     @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
@@ -65,5 +69,10 @@ public class OrderDelivery {
 
     public OrderDelivery() {
         id = new OrderDeliveryPK();
+    }
+
+    public OrderDelivery(FoodOrder foodOrderByFoodOrderId, Car carByCarId) {
+        this.id = new OrderDeliveryPK(foodOrderByFoodOrderId);
+        this.carByCarId = carByCarId;
     }
 }

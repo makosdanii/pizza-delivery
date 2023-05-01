@@ -16,7 +16,7 @@ import java.util.Objects;
         scope = Edge.class
 )
 @Entity
-public class Edge implements Comparator<Edge> {
+public class Edge implements Comparable<Edge>, Comparator<Edge> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -61,6 +61,7 @@ public class Edge implements Comparator<Edge> {
         this.edgeWeight = edgeWeight;
     }
 
+    //for instances in PrQue
     @Override
     public int compare(Edge node1, Edge node2) {
         if (node1.edgeWeight < node2.edgeWeight)
@@ -118,5 +119,15 @@ public class Edge implements Comparator<Edge> {
 
     public void setMapsById_0(Collection<Map> mapsById_0) {
         this.mapsById_0 = mapsById_0;
+    }
+
+    @Override
+    public int compareTo(Edge o) {
+        if (getId() > o.getId()) {
+            return 1;
+        } else if (getId() < o.getId()) {
+            return -1;
+        } else
+            return 0;
     }
 }

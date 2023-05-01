@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -35,6 +36,13 @@ public class EdgeService {
             edge.getMapsById().forEach(id -> adjacency.add(id.getEdgeByNeighbourId()));
             graph.add(adjacency);
         });
+
+        graph.stream().sorted(new Comparator<ArrayList<Edge>>() {
+            @Override
+            public int compare(ArrayList<Edge> o1, ArrayList<Edge> o2) {
+                return o1.get(0).compareTo(o2.get(0));
+            }
+        }).toList();
 
         return graph;
     }
