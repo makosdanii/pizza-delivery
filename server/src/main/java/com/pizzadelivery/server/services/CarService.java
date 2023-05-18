@@ -1,11 +1,9 @@
 package com.pizzadelivery.server.services;
 
-
-import com.pizzadelivery.server.config.UserAuthorizationDetails;
+import com.pizzadelivery.server.config.utils.UserAuthorizationDetails;
 import com.pizzadelivery.server.data.entities.Car;
 import com.pizzadelivery.server.data.entities.CarIngredient;
 import com.pizzadelivery.server.data.entities.Inventory;
-import com.pizzadelivery.server.data.entities.OrderDelivery;
 import com.pizzadelivery.server.data.repositories.*;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
@@ -13,16 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.pizzadelivery.server.utils.Dispatcher.CAR_CAPACITY;
-import static java.lang.Thread.sleep;
 
 @Service
-public class CarService implements ServiceORM<Car> {
+public class CarService extends ServiceORM<Car> {
     CarRepository carRepository;
     UserRepository userRepository;
     InventoryRepository inventoryRepository;
@@ -61,30 +57,41 @@ public class CarService implements ServiceORM<Car> {
         return carRepository.findById(id);
     }
 
-    public Iterable<Car> listAll() {
-        return carRepository.findAll();
+    public Iterable<Car> listAll(boolean isAdmin) {
+        if (isAdmin) {
+            return carRepository.findAll();
+        } else {
+            var driver = (UserAuthorizationDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return carRepository.findAllByUserByUserIdOrUserByUserIdIsNull(userRepository.findById(driver.getId()).get());
+        }
     }
 
+    // persist after in transactional
     public Car updateCar(int id, Car car) throws AlreadyExistsException {
         Car old = carRepository.findById(id).orElse(new Car());
-        var authenticated = Optional.ofNullable(SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal());
+        var authenticated = SecurityContextHolder.getContext()
+                .getAuthentication().isAuthenticated();
 
-        if (!authenticated.isEmpty()) {
+        if (authenticated) {
             // only admin can update license plate
-            if (!((UserAuthorizationDetails) authenticated.get()).getAuthorities()
+            if (!SecurityContextHolder.getContext()
+                    .getAuthentication().getAuthorities()
                     .contains(new SimpleGrantedAuthority("admin")))
                 car.setLicense(old.getLicense());
 
-            if (old.getUserByUserId() != null && !isAuthorizedForCar(old) ||
-                    car.getUserByUserId() != null && !isAuthorizedForCar(car))
+            // case of leaving the car
+            if (old.getUserByUserId() != null && !isAuthorizedForCar(old))
+                throw new ConstraintViolationException("Only admin or driver can assign people", new HashSet<>());
+
+            // case of driving it
+            if (car.getUserByUserId() != null && !isAuthorizedForCar(car))
                 throw new ConstraintViolationException("Only admin or driver can assign people", new HashSet<>());
         }
 
         if (old.getId() != UNASSIGNED) {
             checkConstraint(car, !old.getLicense().equals(car.getLicense()));
             car.setId(id);
-            return carRepository.save(car);
+            return car;
         }
 
         return old;
@@ -99,74 +106,53 @@ public class CarService implements ServiceORM<Car> {
         return true;
     }
 
-    public void modifyCarIngredient(int id, CarIngredient carIngredient) {
-        carIngredient.setCarByCarId(carRepository.findById(id).get());
-        if (!ingredientRepository.existsById(carIngredient.getIngredientByIngredientId().getId())) {
-            throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
-        } else {
-            carIngredientRepository.save(carIngredient);
-            carRepository.findById(id).get();
-        }
-
+    public List<CarIngredient> listCarIngredients(Car car) {
+        return carIngredientRepository.findAllByIdCarByCarId(car);
     }
 
-    public Car fillCarIngredients(int carId) {
-        var car = carRepository.findById(carId).orElseThrow();
+    // persist after in transactional
+    public Map<CarIngredient, Inventory> fillCarIngredients(Car car) {
+        Map<CarIngredient, Inventory> ingredients = new HashMap<>();
+
         ingredientRepository.findAll().forEach(ingredient -> {
-            var corresponding = car.getCarIngredientsById().stream()
+            CarIngredient corresponding = listCarIngredients(car).stream()
                     .filter(carIngredient -> carIngredient.getIngredientByIngredientId().equals(ingredient)).findFirst()
                     .orElse(new CarIngredient(0, ingredient, car));
 
             int deficit = CAR_CAPACITY - corresponding.getCurrentQuantity();
             if (deficit > 0) {
-                inventoryService.modifyInventory(new Inventory(car, 0,
-                        deficit, ingredient), false);
-                corresponding.setCurrentQuantity(CAR_CAPACITY);
-                carIngredientRepository.save(corresponding);
                 try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Inventory inventoryChange = inventoryService.modifyInventory(new Inventory(car, 0,
+                            deficit, ingredient), false);
+                    corresponding.setCurrentQuantity(CAR_CAPACITY);
+
+                    ingredients.put(corresponding, inventoryChange);
+                } catch (ConstraintViolationException e) {
+                    System.out.printf("Ingredient %s - Requested quantity (%d) unavailable%n", ingredient.getName(), deficit);
                 }
             }
         });
-        return car;
+        return ingredients;
     }
 
-    public void depotCarIngredients(int carId) {
-        carRepository.findById(carId).orElseThrow().getCarIngredientsById().forEach(carIngredient -> {
+    // persist after in transactional
+    public Map<CarIngredient, Inventory> depotCarIngredients(Car car) {
+        Map<CarIngredient, Inventory> ingredients = new HashMap<>();
+        listCarIngredients(car).forEach(carIngredient -> {
             if (carIngredient.getCurrentQuantity() > 0) {
-                inventoryService.modifyInventory(new Inventory(carIngredient.getCarByCarId(), 0,
+                Inventory inventoryChange = inventoryService.modifyInventory(new Inventory(carIngredient.getCarByCarId(), 0,
                         carIngredient.getCurrentQuantity(), carIngredient.getIngredientByIngredientId()), true);
                 carIngredient.setCurrentQuantity(0);
-                carIngredientRepository.save(carIngredient);
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                ingredients.put(carIngredient, inventoryChange);
             }
         });
+
+        return ingredients;
     }
 
-    public Car deliverOrders(int id, List<OrderDelivery> orderDeliveries) {
-        var car = carRepository.findById(id)
-                .orElseThrow(() -> new ConstraintViolationException("Invalid ID constraint", new HashSet<>()));
-        orderDeliveries.forEach(orderDelivery -> {
-            if (!foodOrderRepository.existsById(orderDelivery.getFoodOrderByFoodOrderId().getId())) {
-                throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
-            } else {
-                orderDelivery.setCarByCarId(car);
-                orderDeliveryRepository.save(orderDelivery);
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-        });
-        return car;
+    @Transactional
+    public void dropCarIngredients(Car car) {
+        carIngredientRepository.deleteAllByIdCarByCarId(car);
     }
 
     @Override
@@ -189,6 +175,13 @@ public class CarService implements ServiceORM<Car> {
                 .getAuthentication().getPrincipal();
         return authenticated.getAuthorities().contains(new SimpleGrantedAuthority("admin"))
                 || car.getUserByUserId().getId() == authenticated.getId();
+    }
+
+    @Override
+    @Transactional
+    public void persist(Object entity) {
+        entityManager.merge(entity);
+        entityManager.flush();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.Ingredient;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
@@ -40,23 +40,13 @@ public class IngredientController extends Controller {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Ingredient> registerIngredient(@RequestBody @Valid Ingredient ingredient) {
-        try {
-            ingredient = ingredientService.createIngredient(ingredient);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Ingredient());
-        }
-        return new ResponseEntity<>(ingredient, HttpStatus.CREATED);
+    public ResponseEntity<Ingredient> registerIngredient(@RequestBody @Valid Ingredient ingredient) throws AlreadyExistsException {
+        return new ResponseEntity<>(ingredientService.createIngredient(ingredient), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Ingredient> updateIngredient(@PathVariable @Positive int id, @RequestBody @Valid Ingredient ingredient) {
-        try {
-            ingredient = ingredientService.updateIngredient(id, ingredient);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Ingredient());
-        }
-
+    public ResponseEntity<Ingredient> updateIngredient(@PathVariable @Positive int id, @RequestBody @Valid Ingredient ingredient) throws AlreadyExistsException {
+        ingredient = ingredientService.updateIngredient(id, ingredient);
         return new ResponseEntity<>(ingredient, ingredient.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 

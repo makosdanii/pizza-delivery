@@ -14,4 +14,6 @@ public interface CarRepository extends CrudRepository<Car, Integer> {
     public List<Car> findByUserByUserId(User user);
 
     public List<Car> findAll();
+
+    public List<Car> findAllByUserByUserIdOrUserByUserIdIsNull(User userByUserId);
 }

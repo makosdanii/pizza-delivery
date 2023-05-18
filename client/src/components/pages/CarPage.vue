@@ -4,6 +4,8 @@
       :headers="headers"
       :items="cars"
       :schema="schema"
+      :cannot-create="role !== 'admin'"
+      :cannot-delete="role !== 'admin'"
       @save="save"
       @delete="erase"
       @edit="edit"
@@ -14,10 +16,12 @@
       <v-container>
         <v-row>
           <v-col cols="12" sm="6" md="4">
-            <v-text-field name="license" v-model="editedItem.license" label="License" :error-messages="errors.license"/>
+            <v-text-field name="license" v-model="editedItem.license" label="License" :disabled="role !== 'admin'"
+                          :error-messages="errors.license"/>
           </v-col>
           <v-col cols="12" sm="6" md="4">
             <v-select
+                :disabled="role !== 'admin'"
                 :items="drivers"
                 item-title="name"
                 item-value="id"
@@ -27,6 +31,17 @@
                 :error-messages="errors.userByUserId"
             ></v-select>
           </v-col>
+          <v-col cols="12" sm="6" md="4">
+            <v-btn prepend-icon="mdi-login-variant"
+                   :disabled="role === 'admin' || editedItem.userByUserId.id.length !== 0"
+                   @click="drive">Drive
+            </v-btn>
+          </v-col>
+          <v-col cols="12" sm="6" md="4">
+            <v-btn prepend-icon="mdi-logout-variant" @click="leave" :disabled="editedItem.userByUserId.id.length === 0">
+              Leave
+            </v-btn>
+          </v-col>
         </v-row>
       </v-container>
     </template>
@@ -34,7 +49,7 @@
 </template>
 
 <script>
-import server from "../../business/PizzaServerAPI.vue";
+import server from "../../business/PizzaServerAPI.js";
 import DataTable from "../DataTable.vue";
 import * as yup from "yup";
 import _ from "lodash";
@@ -52,9 +67,28 @@ export default {
     DataTable,
   },
 
-  inject: ['cars', 'users', 'listUsers', 'listCars'],
+  inject: ['cars', 'users', 'listUsers', 'listCars', 'role'],
 
   methods: {
+    drive() {
+      this.editedItem.userByUserId.id = server.id()
+      server.updateCar(this.editedItem)
+          .then((promise) => {
+            if (promise.status === 201) {
+              this.listCars()
+              this.$refs.table.snackText = "Updated"
+              this.$refs.table.color = "green"
+              this.$refs.table.snack = true
+            }
+          }).catch(err => {
+        if (err.response.status === 400 || err.response.status === 401) {
+          this.$refs.table.snackText = "Operation denied"
+          this.$refs.table.color = "red"
+          this.$refs.table.snack = true
+        }
+      })
+      this.reset()
+    },
     save() {
       this.errors = {}
       this.schema.validate(this.editedItem, {abortEarly: false})
@@ -66,18 +100,32 @@ export default {
                       if (promise.status === 201) {
                         this.listCars()
                         this.$refs.table.snackText = "Created"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
                 :
                 server.updateCar(this.editedItem)
                     .then((promise) => {
                       if (promise.status === 201) {
                         this.listCars()
                         this.$refs.table.snackText = "Updated"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
 
             this.reset()
           })
@@ -100,13 +148,39 @@ export default {
             this.listCars()
           }
           this.$refs.table.snackText = "Deleted"
+          this.$refs.table.color = "green"
           this.$refs.table.snack = true
+        }).catch(err => {
+          if (err.response.status === 400 || err.response.status === 401) {
+            this.$refs.table.snackText = "Operation denied"
+            this.$refs.table.color = "red"
+            this.$refs.table.snack = true
+          }
         });
       }
     },
     reset() {
       this.editedItem = _.cloneDeep(defaultItem)
       this.$refs.table.dialog = false;
+    },
+    leave() {
+      delete this.editedItem.userByUserId
+      server.updateCar(this.editedItem)
+          .then((promise) => {
+            if (promise.status === 201) {
+              this.listCars()
+              this.$refs.table.snackText = "Updated"
+              this.$refs.table.color = "green"
+              this.$refs.table.snack = true
+            }
+          }).catch(err => {
+        if (err.response.status === 400 || err.response.status === 401) {
+          this.$refs.table.snackText = "Operation denied"
+          this.$refs.table.color = "red"
+          this.$refs.table.snack = true
+        }
+      })
+      this.reset()
     }
   },
 
@@ -127,9 +201,12 @@ export default {
   },
 
   async mounted() {
+    await this.listCars()
+    if (this.role !== 'admin') {
+      return
+    }
     await this.listUsers()
     this.drivers = this.users.filter(user => user.roleByRoleId.name === 'driver')
-    await this.listCars()
   },
 };
 </script>

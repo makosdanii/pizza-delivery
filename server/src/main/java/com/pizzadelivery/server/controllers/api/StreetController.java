@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.StreetName;
 import com.pizzadelivery.server.data.repositories.StreetRepository;

@@ -2,6 +2,7 @@ package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
@@ -16,6 +17,10 @@ public class Ingredient {
     @NotBlank
     @Column(name = "name", nullable = false, length = 64)
     private String name;
+    @Basic
+    @Positive
+    @Column(name = "price", nullable = false)
+    private int price;
     @ManyToOne
     @JoinColumn(name = "allergy_id", referencedColumnName = "id")
     private Allergy allergyByAllergyId;
@@ -34,6 +39,14 @@ public class Ingredient {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
     }
 
     @Override
@@ -70,8 +83,9 @@ public class Ingredient {
         this.name = name;
     }
 
-    public Ingredient(String name, Allergy allergyByAllergyId) {
+    public Ingredient(String name, int price, Allergy allergyByAllergyId) {
         this.name = name;
+        this.price = price;
         this.allergyByAllergyId = allergyByAllergyId;
     }
 }

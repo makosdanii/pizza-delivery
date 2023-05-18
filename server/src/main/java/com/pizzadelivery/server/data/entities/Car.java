@@ -3,8 +3,6 @@ package com.pizzadelivery.server.data.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.Collection;
@@ -21,14 +19,12 @@ public class Car {
     @NotBlank
     @Column(name = "license", nullable = true, length = 16, unique = true)
     private String license;
-
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
     private User userByUserId;
     @JsonIgnore
     @UniqueElements
-    @OneToMany(mappedBy = "id.carByCarId", fetch = FetchType.EAGER)
-    @Fetch(FetchMode.SELECT)
+    @OneToMany(mappedBy = "id.carByCarId")
     private Collection<CarIngredient> carIngredientsById;
     @JsonIgnore
     @UniqueElements

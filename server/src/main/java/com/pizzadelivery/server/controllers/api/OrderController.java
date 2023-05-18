@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.OrderDelivery;
@@ -6,13 +6,16 @@ import com.pizzadelivery.server.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.sql.Date;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/order")
-@PreAuthorize("hasAuthority('admin')")
 public class OrderController {
     OrderService orderService;
 
@@ -21,11 +24,15 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @PreAuthorize("hasAnyAuthority('admin', 'customer')")
     @GetMapping
-    public Iterable<FoodOrder> readFoodOrders() {
-        return orderService.readOrders();
+    public Iterable<FoodOrder> readFoodOrders(@RequestParam(required = false) Date before) {
+        var isAdmin = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new SimpleGrantedAuthority("admin"));
+        return orderService.readOrders(before, isAdmin);
     }
 
+    @PreAuthorize("hasAuthority('admin')")
     @DeleteMapping("/{id}")
     public Iterable<FoodOrder> deleteFoodOrder(@PathVariable int id) {
         var orders = orderService.deleteOrder(id);
@@ -33,8 +40,9 @@ public class OrderController {
         return orders;
     }
 
+    @PreAuthorize("hasAuthority('admin')")
     @GetMapping("/delivery")
-    public Iterable<OrderDelivery> readOrderDelivery() {
-        return orderService.readDeliveries();
+    public Iterable<OrderDelivery> readOrderDelivery(@RequestParam(required = false) Date before) {
+        return orderService.readDeliveries(before);
     }
 }

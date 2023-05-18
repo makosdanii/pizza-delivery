@@ -13,14 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import static com.pizzadelivery.server.utils.Dispatcher.INVENTORY_CAPACITY;
-import static java.lang.Thread.sleep;
 
 @Service
-public class InventoryService implements ServiceORM<Inventory> {
+public class InventoryService extends ServiceORM<Inventory> {
     InventoryRepository inventoryRepository;
     CarRepository carRepository;
     IngredientRepository ingredientRepository;
@@ -32,32 +33,32 @@ public class InventoryService implements ServiceORM<Inventory> {
         this.ingredientRepository = ingredientRepository;
     }
 
-    public Iterable<Inventory> readInventory() {
+    public Iterable<Inventory> readInventory(Date before) {
+        if (before != null) {
+            return inventoryRepository.findAllByIdModifiedAtBefore(before);
+        }
         return inventoryRepository.findAll();
     }
 
     public int readInventoryLatestQt(Ingredient ingredient) {
         var inventory = inventoryRepository
-                .findByIngredientByIngredientId(ingredient,
+                .findByIdIngredientByIngredientId(ingredient,
                         Sort.by(Sort.Direction.DESC, "id.modifiedAt"));
-        return inventory.isEmpty() ? 0 : inventory.get(0).getQuantity();
+        return inventory.isEmpty() ? 0 : inventory.get(0).getCurrent();
     }
 
-    public void fillInventory() {
-        System.out.println("----------Filling inventory----------");
+    // persist after in transactional
+    public List<Inventory> fillInventory() {
+        List<Inventory> inventories = new ArrayList<>();
         ingredientRepository.findAll().forEach(ingredient -> {
             var current = readInventoryLatestQt(ingredient);
             var deficit = INVENTORY_CAPACITY - current;
             if (deficit > 0)
-                modifyInventory(new Inventory(100, deficit, ingredient), true); //TODO varied price
-
-            try {
-                sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+                inventories.add(modifyInventory(new Inventory(deficit * ingredient.getPrice(), deficit, ingredient),
+                        true));
         });
-        System.out.println("----------Inventory filled----------");
+
+        return inventories;
     }
 
     public Inventory modifyInventory(Inventory inventory, boolean increase) {
@@ -72,19 +73,19 @@ public class InventoryService implements ServiceORM<Inventory> {
 
             //check if any record of the ingredient is present
             if (!(records = inventoryRepository
-                    .findByIngredientByIngredientId(inventory.getIngredientByIngredientId(),
+                    .findByIdIngredientByIngredientId(inventory.getIngredientByIngredientId(),
                             Sort.by(Sort.Direction.DESC, "id.modifiedAt"))).isEmpty())
-                lastQuantity = records.get(0).getQuantity();
+                lastQuantity = records.get(0).getCurrent();
 
-
-            if (!increase && lastQuantity < inventory.getQuantity())
+            // if dispatcher tried to access unavailable qt from inventory then corresponding orders will be dismissed
+            if (!increase && lastQuantity < inventory.getCurrent())
                 throw new ConstraintViolationException("Calculated current quantity cannot be negative", new HashSet<>());
 
-            inventory.setQuantity(increase ?
-                    lastQuantity + inventory.getQuantity() :
-                    lastQuantity - inventory.getQuantity());
+            inventory.setCurrent(increase ?
+                    lastQuantity + inventory.getCurrent() :
+                    lastQuantity - inventory.getCurrent());
 
-            return inventoryRepository.save(inventory);
+            return inventory;
         }
 
         throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
@@ -94,13 +95,13 @@ public class InventoryService implements ServiceORM<Inventory> {
         var inventory = inventoryRepository.findById(id)
                 .orElseThrow(() -> new ConstraintViolationException("Invalid ID constraint", new HashSet<>()));
         if (!inventoryRepository
-                .findByIngredientByIngredientId(inventory.getIngredientByIngredientId(),
+                .findByIdIngredientByIngredientId(inventory.getIngredientByIngredientId(),
                         Sort.by(Sort.Direction.DESC, "id.modifiedAt")).get(0).getModifiedAt()
                 .equals(inventory.getModifiedAt()))
             throw new ConstraintViolationException("Only the latest record can be deleted per ingredient", new HashSet<>());
 
         inventoryRepository.deleteById(id);
-        return readInventory();
+        return readInventory(null);
     }
 
     @Override

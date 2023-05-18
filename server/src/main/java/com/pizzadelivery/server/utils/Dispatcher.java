@@ -3,58 +3,85 @@ package com.pizzadelivery.server.utils;
 import com.pizzadelivery.server.data.entities.*;
 import com.pizzadelivery.server.data.repositories.StreetRepository;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
-import com.pizzadelivery.server.services.*;
+import com.pizzadelivery.server.services.CarService;
+import com.pizzadelivery.server.services.EdgeService;
+import com.pizzadelivery.server.services.InventoryService;
+import com.pizzadelivery.server.services.MenuService;
 import com.pizzadelivery.server.utils.callables.Travelling;
-import jakarta.validation.ConstraintViolationException;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
+import static java.lang.Thread.sleep;
 
 @Service
+@Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class Dispatcher {
-    private final EdgeService edgeService;
+    private ApplicationContext applicationContext;
     private final InventoryService inventoryService;
     private final MenuService menuService;
     private final CarService carService;
     private final StreetRepository streetRepository;
-    private Edge inventoryLocation;
+    private final Edge inventoryLocation;
     private final Navigation navigation;
     private final Map<Car, Edge> carLocations = new HashMap<>();
-    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     public static final int INVENTORY_LOCATION = 10;
     public static final int INVENTORY_CAPACITY = 2000;
     public static final int CAR_CAPACITY = 200;
 
-
     @Autowired
-    public Dispatcher(EdgeService edgeService,
+    public Dispatcher(ApplicationContext applicationContext,
+                      EdgeService edgeService,
                       InventoryService inventoryService,
                       CarService carService,
                       MenuService menuService,
-                      IngredientService ingredientService,
                       StreetRepository streetRepository) {
+        this.applicationContext = applicationContext;
         this.streetRepository = streetRepository;
-        this.edgeService = edgeService;
         this.inventoryLocation = edgeService.findEdge(INVENTORY_LOCATION);
         navigation = new Navigation(edgeService);
-
         this.menuService = menuService;
         this.inventoryService = inventoryService;
-        executorService.submit(inventoryService::fillInventory);
-
         this.carService = carService;
-        log("Dispatcher is active");
     }
 
-    public int dispatch(List<FoodOrder> foodOrders) throws Exception {
+    @PostConstruct
+    private void initialize() {
+        inventoryService.fillInventory().forEach(inventoryService::persist);
+        log("Inventory filled");
+    }
+
+    @PreDestroy
+    private void shutDown() {
+        log("Termination started");
+
+        boolean shutDown = false;
+        try {
+            executorService.shutdown();
+            shutDown = executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+        }
+
+        if (shutDown) {
+            Set<Car> cars = new HashSet<>(carLocations.keySet());
+            cars.forEach(this::depot);
+        }
+    }
+
+    public int dispatch(List<FoodOrder> foodOrders) {
         // API provides edges with the house number in descending order if the edge ids are ascending per street,
         // linearly we search the one which customers house number is on
         Edge orderEdge = findOrderEdge(foodOrders.get(0).getUserByUserId());
@@ -66,14 +93,17 @@ public class Dispatcher {
         ArrayList<MenuIngredient> sumMenuIngredients = summarizeMenuIngredient(foodOrders);
 
         // removing any orders which contains any menus for which any ingredients are not supplied that day
+        // or inventory is out of
         filterForOrdersWithFaultyIngredients(foodOrders, sumMenuIngredients);
+        if (foodOrders.isEmpty())
+            return 0;
 
         // first car which can deliver,
         // depending on if car's percents cover all the orders' ingredients' quantities, is the best option for closeness
         var eligible = false;
         for (Car car : availableCars) {
             //we need the current carIngredient quantities in the local scope
-            final var carIngredients = carService.findCar(car.getId()).orElseThrow().getCarIngredientsById();
+            final var carIngredients = carService.listCarIngredients(car);
 
             eligible = sumMenuIngredients.stream().allMatch(ingredient -> {
                 var carIngredientCorresponding = carIngredients.stream()
@@ -85,134 +115,102 @@ public class Dispatcher {
             });
 
             if (eligible) {
+                // reduce from car's ingredients the amount which needed to bake onboard
                 sumMenuIngredients.forEach(ingredient -> {
                     int current = carIngredients.stream()
                             .filter(carIngredient -> carIngredient.getIngredientByIngredientId().
                                     equals(ingredient.getIngredientByIngredientId())).findFirst().get()
                             .getCurrentQuantity();
 
-                    carService.modifyCarIngredient(car.getId(),
-                            new CarIngredient(current - ingredient.getQuantity(),
-                                    ingredient.getIngredientByIngredientId())
-                    );
+                    carService.persist(new CarIngredient(current - ingredient.getQuantity(),
+                            ingredient.getIngredientByIngredientId(), car));
                 });
 
-                Callable<Void> deliverOrders = () -> {
-                    System.out.printf("Car %d - handing out%n", car.getId());
-                    carService.deliverOrders(car.getId(), foodOrders.stream()
-                            .map(order -> new OrderDelivery(order, car)).toList());
-                    System.out.printf("Car %d - delivery completed%n", car.getId());
-                    return null;
-                };
-
-                if (navigation.getHistory() == 0)
-                    navigation.navigate(car, carLocations.get(car), orderEdge);
-
-                var route = navigation.getRoute(car);
-                carLocations.put(car, new Edge());
-                executorService.submit(
-                        new Travelling(carLocations, navigation.getDistance(car), Arrays.copyOf(route, route.length),
-                                car, deliverOrders));
+                setOff(car, orderEdge, foodOrders);
                 break;
             } else {
-                Callable<Void> fillIngredients = () -> {
-                    try {
-                        System.out.printf("Car %d - refilling started%n", car.getId());
-                        carService.fillCarIngredients(car.getId());
-                        System.out.printf("Car %d - refilling completed%n", car.getId());
-                    } catch (ConstraintViolationException e) {
-                        System.out.printf("Car %d - refilling aborted, depoting%n", car.getId());
-                        // if inventory cannot fill a car up anymore, it's better to retire one
-                        car.setUserByUserId(null);
-                        try {
-                            carService.updateCar(car.getId(), car);
-                        } catch (AlreadyExistsException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                        // can block the thread
-                        carService.depotCarIngredients(car.getId());
-                        System.out.printf("Car %d - depot completed, retired%n", car.getId());
-                    }
-                    return null;
-                };
-
-                navigation.navigate(car, carLocations.get(car), inventoryLocation);
-                carLocations.put(car, new Edge());
-                executorService.submit(new Travelling(carLocations, navigation.getDistance(car),
-                        navigation.getRoute(car), car, fillIngredients));
+                // empty list means that car cannot deliver the orders so needs to get refilled
+                setOff(car, inventoryLocation, List.of());
             }
         }
 
-        navigation.clearHistory();
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-        return eligible ? 1 : 0;
+        return eligible ? foodOrders.size() : 0;
     }
 
     private void log(String log) {
-        System.out.println("----------" + log + "----------");
+        int length = log.length();
+        if (length / 2 + 1 > 25) {
+            System.out.println(log);
+            return;
+        }
+        String prefix;
+        String postfix;
+        if (length % 2 == 0) {
+            prefix = "_".repeat(25 - length / 2);
+            postfix = "_".repeat(25 - length / 2);
+        } else {
+            prefix = "_".repeat(25 - length / 2);
+            postfix = "_".repeat(25 - length / 2 + 1);
+        }
+        System.out.println(prefix + log + postfix);
     }
 
-    private List<Car> sortAvailableCar(Edge finalOrderEdge) throws InterruptedException {
+    private void setOff(Car car, Edge destination, List<FoodOrder> foodOrders) {
+        navigation.navigate(car, carLocations.get(car), destination);
+        var task = applicationContext.getBean(Travelling.class);
+        task.setNavigation(navigation);
+        task.setCar(car);
+        task.setMap(carLocations);
+        task.setFoodOrders(foodOrders);
+        task.setDepot(this::depot);
+
+        // means locking the car from further dispatching until task is finished
+        carLocations.put(car, new Edge());
+        executorService.submit(task);
+    }
+
+    private List<Car> sortAvailableCar(Edge finalOrderEdge) {
+        // at start, it's likely that every car is occupied with filling ingredients for a while
         updateFleetLocation();
 
-        // at start, it's likely that every car is occupied with filling ingredients for a while
-        List<Car> availableCars = List.of();
-        int sleep = 0;
+        List<Map.Entry<Car, Edge>> availableCars = carLocations.entrySet().stream()
+                .filter(entry -> entry.getValue().getId() != UNASSIGNED).toList();
 
-        do {
-            availableCars = carLocations.entrySet().stream()
-                    .filter(entry -> entry.getKey().getUserByUserId() != null
-                            && entry.getValue().getId() != UNASSIGNED)
-                    .toList().stream().sorted(new Comparator<Map.Entry<Car, Edge>>() {
-                        @Override
-                        public int compare(Map.Entry<Car, Edge> o1, Map.Entry<Car, Edge> o2) {
-                            try {
-                                return navigation.navigate(o1.getKey(), o1.getValue(), finalOrderEdge)
-                                        .compareTo(navigation.navigate(o2.getKey(), o2.getValue(), finalOrderEdge));
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }).map(Map.Entry::getKey).toList();
-            sleep += 500; // if the reason for availableCars being empty is that there are no drivers, don't wait
-        } while (!executorService.awaitTermination(sleep, TimeUnit.MILLISECONDS) && availableCars.isEmpty());
-        return availableCars;
+        if (availableCars.isEmpty()) {
+            log("Car fleet empty");
+            return List.of();
+        }
+
+        return availableCars.stream().sorted((o1, o2) -> {
+            try {
+                return navigation.navigate(o1.getKey(), o1.getValue(), finalOrderEdge)
+                        .compareTo(navigation.navigate(o2.getKey(), o2.getValue(), finalOrderEdge));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).map(Map.Entry::getKey).toList();
     }
 
     private void updateFleetLocation() {
         // using instances retrieved from carService to catch if new car was registered, or new driver hopped in,
         // in that case it gets filled up
-        carService.listAll().forEach(car -> {
-            if (!carLocations.containsKey(car)) {
-                carLocations.put(car, inventoryLocation);
-            } else {
-                Edge edge = carLocations.remove(car);
-                carLocations.put(car, edge);
-            }
+        carService.listAll(true).forEach(car -> {
+            //don't care if userId == null and haven't been put into map
+            if (car.getUserByUserId() == null && carLocations.containsKey(car)) {
+                System.out.printf("Car %d - drive left%n", car.getId());
 
-            if (car.getUserByUserId() != null && car.getCarIngredientsById().isEmpty()) {
-                // although the car does not need to travel for refill, it still needs to be locked
-                carLocations.put(car, new Edge());
-                executorService.submit(() -> {
-                    try {
-                        System.out.printf("Car %d - refilling started%n", car.getId());
-                        carService.fillCarIngredients(car.getId());
-                        System.out.printf("Car %d - refilling completed%n", car.getId());
-                        carLocations.put(car, inventoryLocation);
-                    } catch (ConstraintViolationException e) {
-                        System.out.printf("Car %d - refilling aborted, depoting%n", car.getId());
-                        // if inventory cannot fill a car up anymore, it's better to retire one
-                        car.setUserByUserId(null);
-                        try {
-                            carService.updateCar(car.getId(), car);
-                        } catch (AlreadyExistsException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                        // can block the thread
-                        carService.depotCarIngredients(car.getId());
-                        System.out.printf("Car %d - depot completed, retired%n", car.getId());
-                    }
-                });
+                depot(car);
+                // don't care if userId != null and already in the map
+            } else if (car.getUserByUserId() != null && !carLocations.containsKey(car)) {
+                System.out.printf("Car %d - driver arrived%n", car.getId());
+                carService.fillCarIngredients(car).forEach(((carIngredient, inventory) -> {
+                    // it's the same function tbh
+                    carService.persist(carIngredient);
+                    inventoryService.persist(inventory);
+                }));
+
+                carLocations.put(car, inventoryLocation);
+                System.out.printf("Car %d - filled, ready%n", car.getId());
             }
         });
     }
@@ -222,7 +220,7 @@ public class Dispatcher {
                 .findById(customer.getStreetNameByStreetNameId().getId()).orElseThrow();
         Edge orderEdge = null;
 
-        Edge[] edges = street.getEdgesById().stream().sorted().<Edge>toArray(Edge[]::new);
+        Edge[] edges = street.getEdgesById().stream().sorted().toArray(Edge[]::new);
         for (int i = 0; i < edges.length - 1; i++) {
             if (edges[i].getVertex() >= customer.getHouseNo() &&
                     customer.getHouseNo() >= edges[i + 1].getVertex())
@@ -257,44 +255,61 @@ public class Dispatcher {
     }
 
     private void filterForOrdersWithFaultyIngredients(List<FoodOrder> foodOrders, List<MenuIngredient> sumMenuIngredients) {
+        var faulty = new ArrayList<MenuIngredient>();
         for (MenuIngredient sumMenuIngredient : sumMenuIngredients) {
             if (inventoryService.readInventoryLatestQt(sumMenuIngredient.getIngredientByIngredientId())
                     < sumMenuIngredient.getQuantity()) {
-                foodOrders = foodOrders.stream()
+                foodOrders.removeAll(foodOrders.stream()
                         .filter(order -> {
                             var orderIngredients = order.getMenuByMenuId().getMenuIngredientsById().stream();
                             var orderFaultyIngredient = orderIngredients.filter(_ingredient -> _ingredient
                                     .getIngredientByIngredientId()
                                     .equals(sumMenuIngredient.getIngredientByIngredientId())).findFirst();
-                            return orderFaultyIngredient.isEmpty();
-                        }).toList();
+                            return orderFaultyIngredient.isPresent();
+                        }).toList());
+                faulty.add(sumMenuIngredient);
+                System.out.printf("Menu %s - rejected, %s is unavailable in inventory%n",
+                        sumMenuIngredient.getMenuByMenuId().getName(),
+                        sumMenuIngredient.getIngredientByIngredientId().getName());
             }
         }
+
+        sumMenuIngredients.removeAll(faulty);
     }
 
-    public void shutDown() {
-        boolean termination = false;
-        log("Termination has begun");
+    public int reset() {
+        shutDown();
         try {
-            termination = executorService.awaitTermination(15, TimeUnit.SECONDS);
+            log("Terminated - Reloading");
+            sleep(1000);
         } catch (InterruptedException e) {
-            executorService.shutdownNow();
+            throw new RuntimeException(e);
+        }
+        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        inventoryService.fillInventory().forEach(inventoryService::persist);
+        log("Dispatcher is active");
+        return 0;
+    }
+
+    // must be called by new thread
+    private int depot(Car car) {
+        // if inventory cannot fill a car up anymore, it's better to retire one
+        carLocations.remove(car);
+        car.setUserByUserId(null);
+        try {
+            var entity = carService.updateCar(car.getId(), car);
+            carService.persist(entity);
+        } catch (AlreadyExistsException ex) {
+            throw new RuntimeException(ex);
         }
 
-        if (termination) {
-            log("Depoting");
-            carLocations.keySet().forEach(car -> {
-                executorService.submit(() -> carService.depotCarIngredients(car.getId()));
-                car.setUserByUserId(null);
-                try {
-                    carService.updateCar(car.getId(), car);
-                } catch (AlreadyExistsException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+        carService.depotCarIngredients(car).forEach(((carIngredient, inventory) -> {
+            // it's the same function tbh
+            carService.dropCarIngredients(car);
+            inventoryService.persist(inventory);
+        }));
 
-        executorService.shutdown();
-        log("Finished");
+        System.out.printf("Car %d - depoted, retired%n", car.getId());
+        return 0;
     }
 }

@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import server from "../business/PizzaServerAPI.vue";
+import server from "../business/PizzaServerAPI.js";
 import {computed} from "vue";
 
 export default {
@@ -59,15 +59,15 @@ export default {
       }).catch((err) => console.log(err))
     },
     async logout() {
-      await server.unset().then(promise => {
-        if (promise.status === 200) {
-          this.users = this.roles = this.cars = this.allergies = this.ingredients = this.orders = []
-          this.role = ""
-          this.$cookies.remove('userId')
-          this.$cookies.remove('role')
-          this.$cookies.remove('token')
-        }
-      }).catch((err) => console.log(err));
+      // await server.unset().then(promise => {
+      //   if (promise.status === 200) {
+      this.users = this.roles = this.cars = this.allergies = this.ingredients = this.orders = []
+      this.role = ""
+      this.$cookies.remove('userId')
+      this.$cookies.remove('role')
+      this.$cookies.remove('token')
+      //   }
+      // }).catch((err) => console.log(err));
       return !this.role.length
     },
     async listUsers() {

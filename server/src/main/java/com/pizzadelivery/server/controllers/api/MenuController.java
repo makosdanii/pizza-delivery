@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.Menu;
 import com.pizzadelivery.server.data.entities.MenuIngredient;
@@ -41,13 +41,8 @@ public class MenuController extends Controller {
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
     @PostMapping("/add")
-    public ResponseEntity<Menu> registerMenu(@RequestBody @Valid Menu menu) {
-        try {
-            menu = menuService.createMenu(menu);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Menu());
-        }
-        return new ResponseEntity<>(menu, HttpStatus.CREATED);
+    public ResponseEntity<Menu> registerMenu(@RequestBody @Valid Menu menu) throws AlreadyExistsException {
+        return new ResponseEntity<>(menuService.createMenu(menu), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
@@ -66,13 +61,8 @@ public class MenuController extends Controller {
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
     @PutMapping("/{id}")
-    public ResponseEntity<Menu> updateMenu(@PathVariable @Positive int id, @RequestBody @Valid Menu menu) {
-        try {
-            menu = menuService.updateMenu(id, menu);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Menu());
-        }
-
+    public ResponseEntity<Menu> updateMenu(@PathVariable @Positive int id, @RequestBody @Valid Menu menu) throws AlreadyExistsException {
+        menu = menuService.updateMenu(id, menu);
         return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 

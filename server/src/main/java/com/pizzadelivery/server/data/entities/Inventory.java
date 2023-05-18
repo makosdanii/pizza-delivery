@@ -1,7 +1,10 @@
 package com.pizzadelivery.server.data.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
@@ -19,10 +22,7 @@ public class Inventory {
     @Positive
     @Basic
     @Column(name = "current_qt", nullable = false)
-    private int currentQt;
-    @ManyToOne
-    @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
-    private Ingredient ingredientByIngredientId;
+    private Integer current;
 
     public InventoryPK getId() {
         return id;
@@ -40,12 +40,12 @@ public class Inventory {
         this.expense = expense;
     }
 
-    public int getQuantity() {
-        return currentQt;
+    public int getCurrent() {
+        return current;
     }
 
-    public void setQuantity(int currentQt) {
-        this.currentQt = currentQt;
+    public void setCurrent(int currentQt) {
+        this.current = currentQt;
     }
 
     public Timestamp getModifiedAt() {
@@ -53,11 +53,11 @@ public class Inventory {
     }
 
     public Ingredient getIngredientByIngredientId() {
-        return ingredientByIngredientId;
+        return id.getIngredientByIngredientId();
     }
 
     public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
-        this.ingredientByIngredientId = ingredientByIngredientId;
+        id.setIngredientByIngredientId(ingredientByIngredientId);
     }
 
     public void setModifiedAt(Timestamp modifiedAt) {
@@ -77,16 +77,14 @@ public class Inventory {
     }
 
     public Inventory(Integer expense, int currentQt, Ingredient ingredientByIngredientId) {
-        id = new InventoryPK();
+        id = new InventoryPK(ingredientByIngredientId);
         this.expense = expense;
-        this.currentQt = currentQt;
-        this.ingredientByIngredientId = ingredientByIngredientId;
+        this.current = currentQt;
     }
 
     public Inventory(Car carByCarId, Integer expense, int currentQt, Ingredient ingredientByIngredientId) {
-        this.id = new InventoryPK(carByCarId);
+        this.id = new InventoryPK(carByCarId, ingredientByIngredientId);
         this.expense = expense;
-        this.currentQt = currentQt;
-        this.ingredientByIngredientId = ingredientByIngredientId;
+        this.current = currentQt;
     }
 }

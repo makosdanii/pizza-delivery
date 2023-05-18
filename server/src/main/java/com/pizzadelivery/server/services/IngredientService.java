@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 
 @Service
-public class IngredientService implements ServiceORM<Ingredient> {
+public class IngredientService extends ServiceORM<Ingredient> {
     IngredientRepository ingredientRepository;
     AllergyRepository allergyRepository;
 

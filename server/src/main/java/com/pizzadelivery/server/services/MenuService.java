@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.stream.Stream;
 
 @Service
-public class MenuService implements ServiceORM<Menu> {
+public class MenuService extends ServiceORM<Menu> {
     MenuRepository menuRepository;
     IngredientRepository ingredientRepository;
     MenuIngredientRepository menuIngredientRepository;

@@ -1,7 +1,7 @@
 package com.pizzadelivery.server.controllers;
 
-import com.pizzadelivery.server.config.JwtTokenUtil;
-import com.pizzadelivery.server.config.UserAuthorizationDetails;
+import com.pizzadelivery.server.config.utils.JwtTokenUtil;
+import com.pizzadelivery.server.config.utils.UserAuthorizationDetails;
 import com.pizzadelivery.server.dto.AuthenticationDTO;
 import com.pizzadelivery.server.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;

@@ -17,6 +17,10 @@
             <v-text-field name="name" v-model="editedItem.name" label="Name" :error-messages="errors.name"/>
           </v-col>
           <v-col cols="12" sm="6" md="4">
+            <v-text-field type="number" name="price" v-model="editedItem.price" label="Price"
+                          :error-messages="errors.price"/>
+          </v-col>
+          <v-col cols="12" sm="6" md="4">
             <v-select
                 :items="allergies"
                 item-title="name"
@@ -34,7 +38,7 @@
 </template>
 
 <script>
-import server from "../../business/PizzaServerAPI.vue";
+import server from "../../business/PizzaServerAPI.js";
 import DataTable from "../DataTable.vue";
 import * as yup from "yup";
 import _ from "lodash";
@@ -42,6 +46,7 @@ import _ from "lodash";
 const defaultItem = {
   id: 0,
   name: "",
+  price: 0,
   allergyByAllergyId: {
     id: "",
   },
@@ -66,18 +71,32 @@ export default {
                       if (promise.status === 201) {
                         this.listIngredients()
                         this.$refs.table.snackText = "Created"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
                 :
                 server.updateIngredient(this.editedItem)
                     .then((promise) => {
                       if (promise.status === 201) {
                         this.listIngredients()
                         this.$refs.table.snackText = "Updated"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
 
             this.reset()
           })
@@ -100,7 +119,14 @@ export default {
             this.listIngredients()
           }
           this.$refs.table.snackText = "Deleted"
+          this.$refs.table.color = "green"
           this.$refs.table.snack = true
+        }).catch(err => {
+          if (err.response.status === 400 || err.response.status === 401) {
+            this.$refs.table.snackText = "Operation denied"
+            this.$refs.table.color = "red"
+            this.$refs.table.snack = true
+          }
         });
       }
     },
@@ -115,11 +141,13 @@ export default {
       headers: [
         {title: "Name", key: "name"},
         {title: "Allergy", key: "allergyByAllergyId.name"},
+        {title: "Price/Unit (Ft)", key: "price"},
         {title: "Actions", key: "actions", sortable: false},
       ],
       editedItem: _.cloneDeep(defaultItem),
       schema: yup.object({
-        name: yup.string().required()
+        name: yup.string().required(),
+        price: yup.number().min(1).required()
       }),
       errors: {}
     };

@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.User;
@@ -38,7 +38,6 @@ public class UserController extends Controller {
     @GetMapping("/{id}")
     public ResponseEntity<User> findUser(@PathVariable @Positive @P("id") int id) {
         User user = userService.findUser(id);
-
         return new ResponseEntity<>(user, user.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
@@ -49,24 +48,14 @@ public class UserController extends Controller {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody @Validated(NonValidatedOnPersistTime.class) User user) {
-        try {
-            user = userService.createUser(user);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new User());
-        }
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+    public ResponseEntity<User> registerUser(@RequestBody @Validated(NonValidatedOnPersistTime.class) User user) throws AlreadyExistsException {
+        return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAuthority('admin') || principal.getId() == #id")
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable @Positive @P("id") int id, @RequestBody @Valid User user) {
-        try {
-            user = userService.updateUser(id, user);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new User());
-        }
-
+    public ResponseEntity<User> updateUser(@PathVariable @Positive @P("id") int id, @RequestBody @Valid User user) throws AlreadyExistsException {
+        user = userService.updateUser(id, user);
         return new ResponseEntity<>(user, user.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 
@@ -81,6 +70,6 @@ public class UserController extends Controller {
     public ResponseEntity<Integer> placeOrder(@PathVariable @Positive @P("id") int id,
                                               @RequestBody @Validated(NonValidatedOnPersistTime.class) List<FoodOrder> foodOrders) {
         var order = userService.placeOrder(id, foodOrders);
-        return new ResponseEntity<>(order, order == 1 ? HttpStatus.CREATED : HttpStatus.OK);
+        return new ResponseEntity<>(order, order > 0 ? HttpStatus.CREATED : HttpStatus.OK);
     }
 }

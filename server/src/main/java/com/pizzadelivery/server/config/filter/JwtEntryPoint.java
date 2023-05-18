@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.config;
+package com.pizzadelivery.server.config.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

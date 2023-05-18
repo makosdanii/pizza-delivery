@@ -1,6 +1,7 @@
 package com.pizzadelivery.server.data.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class User {
     @NotBlank
     @Column(name = "name", length = 64)
     private String name;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Basic
     @NotBlank
     @Column(name = "password", nullable = false, length = 128)
@@ -32,7 +34,7 @@ public class User {
     @OneToMany(mappedBy = "userByUserId")
     private Collection<Car> carsById;
     @JsonIgnore
-    @OneToMany(mappedBy = "userByUserId")
+    @OneToMany(mappedBy = "userByUserId", orphanRemoval = true)
     private Collection<FoodOrder> foodOrdersById;
     @ManyToOne
     @JoinColumn(name = "street_name_id", referencedColumnName = "id")

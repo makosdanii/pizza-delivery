@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.config;
+package com.pizzadelivery.server.config.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

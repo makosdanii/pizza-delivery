@@ -1,7 +1,7 @@
 package com.pizzadelivery.server.services;
 
 
-import com.pizzadelivery.server.config.UserAuthorizationDetails;
+import com.pizzadelivery.server.config.utils.UserAuthorizationDetails;
 import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.Role;
 import com.pizzadelivery.server.data.entities.StreetName;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserService implements UserDetailsService, ServiceORM<User> {
+public class UserService extends ServiceORM<User> implements UserDetailsService {
     UserRepository userRepository;
     StreetRepository streetRepository;
     RoleRepository roleRepository;
@@ -117,11 +117,11 @@ public class UserService implements UserDetailsService, ServiceORM<User> {
                 .orElseThrow(() -> new ConstraintViolationException("Invalid user id", new HashSet<>()));
 
         //userByUserId already validated, now check inside
-        user.setStreetNameByStreetNameId(Optional
-                .ofNullable(foodOrders.get(0).getUserByUserId().getStreetNameByStreetNameId())
-                .orElseThrow(() -> new ConstraintViolationException("Missing address", new HashSet<>())));
-        user.setHouseNo(Optional.of(foodOrders.get(0).getUserByUserId().getHouseNo())
-                .orElseThrow(() -> new ConstraintViolationException("Missing address", new HashSet<>())));
+        var address = Optional
+                .ofNullable(foodOrders.get(0).getUserByUserId())
+                .orElseThrow(() -> new ConstraintViolationException("Missing address", new HashSet<>()));
+        user.setStreetNameByStreetNameId(Optional.ofNullable(address.getStreetNameByStreetNameId()).orElseThrow());
+        user.setHouseNo(address.getHouseNo());
         try {
             checkConstraint(user, false);
         } catch (AlreadyExistsException e) {
@@ -137,11 +137,9 @@ public class UserService implements UserDetailsService, ServiceORM<User> {
             }
 
         });
-        try {
-            return dispatcher.dispatch(foodOrders);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        return dispatcher.dispatch(foodOrders);
+
     }
 
     @Override
@@ -150,23 +148,28 @@ public class UserService implements UserDetailsService, ServiceORM<User> {
             throw new AlreadyExistsException();
         }
 
-        if (!roleRepository.existsById(user.getRoleByRoleId().getId())) {
-            throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
+        Role customer = null;
+        try {
+            customer = roleRepository.findByName("customer").get(0);
+        } catch (IndexOutOfBoundsException e) {
+            throw new ConstraintViolationException("Necessary role is yet to be created", new HashSet<>());
         }
 
-        //if there's no authenticated admin user then only customer user can be created
-        if (SecurityContextHolder.getContext().getAuthentication() == null ||
-                !SecurityContextHolder.getContext().getAuthentication()
-                        .getAuthorities().contains(new SimpleGrantedAuthority("admin"))) {
-            Role customer = null;
-            try {
-                customer = roleRepository.findByName("customer").get(0);
-            } catch (IndexOutOfBoundsException e) {
-                throw new ConstraintViolationException("Necessary role is yet to be created", new HashSet<>());
-            }
+        //if there's no authenticated user then only customer user can be created
+        if (!SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+            user.setRoleByRoleId(customer);
+        } else {
+            var role = roleRepository.findById(user.getRoleByRoleId().getId());
+            if (role.isPresent()) {
+                var sufficientAuthentication = new SimpleGrantedAuthority(role.get().getName());
 
-            if (user.getRoleByRoleId().getId() != customer.getId()) {
-                throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
+                if (!SecurityContextHolder.getContext().getAuthentication()
+                        .getAuthorities().contains(sufficientAuthentication) &&
+                        !SecurityContextHolder.getContext().getAuthentication()
+                                .getAuthorities().contains(new SimpleGrantedAuthority("admin")))
+                    throw new ConstraintViolationException("Forbidden role modification", new HashSet<>());
+            } else {
+                user.setRoleByRoleId(customer);
             }
         }
 

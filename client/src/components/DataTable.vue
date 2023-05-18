@@ -4,6 +4,7 @@
       :items="items"
       :search="search"
       :show-expand="expand"
+      :sort-desc="true"
       class="table"
   >
     <template #top>
@@ -22,7 +23,7 @@
         </v-dialog>
         <v-dialog v-model="dialog" max-width="500px">
           <template #activator="{ props }">
-            <v-btn color="primary" dark v-bind="props" :disabled="cannotCreate">
+            <v-btn color="primary" dark v-bind="props" v-show="!cannotCreate">
               <v-icon>mdi-plus</v-icon>
             </v-btn>
           </template>
@@ -57,14 +58,14 @@
     </template>
 
     <template v-slot:item.actions="{ item }">
-      <v-icon :disabled="cannotUpdate"
+      <v-icon v-show="!cannotUpdate"
               size="small"
               class="me-2"
               @click="$emit('edit', item.raw)"
       >
         mdi-pencil
       </v-icon>
-      <v-icon :disabled="cannotDelete"
+      <v-icon v-show="!cannotDelete && item.raw.roleByRoleId?.name !== 'admin'"
               size="small"
               @click="$emit('delete', item.raw)"
       >
@@ -84,7 +85,22 @@
       <p>No data</p>
     </template>
   </v-data-table>
-  <v-snackbar v-model="snack" :timeout="2000">{{ snackText }}</v-snackbar>
+  <v-dialog
+      width="auto"
+  >
+    <template v-slot:activator="{ props }">
+      <v-snackbar v-model="snack" :color="color" :timeout="2000">
+        <v-btn v-show="color === 'red'" icon="mdi-help-circle" variant="plain" v-bind="props"/>
+        {{ snackText }}
+      </v-snackbar>
+    </template>
+    <v-card>
+      <v-card-text>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua.
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -116,7 +132,7 @@ export default {
   },
 
   emits: ['save', 'edit', 'delete', 'cancel'],
-  inject: ['orders', 'setOrders'],
+  inject: ['orders', 'setOrders', 'role'],
 
   data() {
     return {
@@ -124,7 +140,8 @@ export default {
       snack: false,
       snackText: "",
       search: '',
-      selected: [],
+      color: '',
+      selected: []
     };
   },
 

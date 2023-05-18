@@ -16,21 +16,25 @@
         <v-spacer/>
         <v-btn class="mr-4 margin" v-if="orders.length" prepend-icon="mdi-cart"
                @click="$router.push('/')"/>
-        <v-btn class="mr-4 margin" color="primary" type="submit">
+        <v-btn :prepend-icon="name.length ? 'mdi-logout-variant' : 'mdi-login-variant'" class="mr-4 margin"
+               color="primary"
+               type="submit">
           {{ name.length ? "Logout" : "Login" }}
+        </v-btn>
+        <v-btn class="mr-4 margin" color="primary" v-if="!name.length" prepend-icon="mdi-account-plus"
+               @click="$router.push('/user')">Register
         </v-btn>
       </v-row>
     </v-container>
   </form>
   <v-divider inset horizontal/>
-  <v-snackbar v-model="snack" :timeout="3000">{{ snackText }}</v-snackbar>
+  <v-snackbar v-model="snack" :color="color" :timeout="3000">{{ snackText }}</v-snackbar>
 </template>
 
 <script>
 import * as yup from 'yup';
 import _ from "lodash";
-import server from "@/business/PizzaServerAPI.vue";
-import {id} from "@/business/PizzaServerAPI.vue";
+import server from "@/business/PizzaServerAPI.js";
 
 const defaultItem = {
   email: "",
@@ -43,6 +47,7 @@ export default {
     return {
       snack: false,
       snackText: "",
+      color: "",
       schema: yup.object({
         email: yup.string().required().email(),
         password: yup.string().required(),
@@ -60,8 +65,12 @@ export default {
       if (!this.name.length) {
         await this.login({...this.editedItem, rememberMe: false})
         await server.findUser()
-            .then(promise => this.name = promise.data.name)
-            .catch(err => console.log(err))
+            .then(promise => {
+              this.name = promise.data.name
+              this.color = 'green'
+            })
+            .catch(err => this.color = 'red'
+            )
         this.snackText = `Login ${(this.name.length ? "succeeded" : "failed")}`
         this.snack = true;
         this.errors = {}
@@ -77,8 +86,9 @@ export default {
       } else {
         if (await this.logout()) {
           this.name = ''
-          this.snack = true;
           this.snackText = `Logged out`
+          this.color = 'red'
+          this.snack = true;
           this.$router.push('/')
         }
       }
@@ -87,7 +97,7 @@ export default {
     },
   },
   mounted() {
-    if (id())
+    if (server.id())
       server.findUser()
           .then(promise => this.name = promise.data.name)
           .catch(err => console.log(err))

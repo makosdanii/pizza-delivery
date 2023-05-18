@@ -44,16 +44,19 @@ public class Navigation {
         this.routes.clear();
     }
 
-    public Integer navigate(Car car, Edge current, Edge target) throws Exception {
+    public Integer navigate(Car car, Edge current, Edge target) {
         var result = dijkstraShortestPath(current, target);
-        routes.put(car.clone(), result);
+        routes.put(car, result);
 
         return Arrays.stream(result).reduce(0, (acc, curr) -> acc + curr.getEdgeWeight(), Integer::sum);
     }
 
     // public for testing only
-    public Edge[] dijkstraShortestPath(Edge current, Edge target) throws Exception {
-        if (graph == null) throw new Exception("Unloaded graph");
+    public Edge[] dijkstraShortestPath(Edge current, Edge target) {
+        if (current.equals(target)) {
+            return new Edge[]{current};
+        }
+        if (graph == null) throw new IllegalArgumentException("Unloaded graph");
 
         int[] distance = new int[edges.length];
         int[] parent = new int[edges.length];
@@ -66,7 +69,7 @@ public class Navigation {
         int index = node.getId() - 1;
         node.setEdgeWeight(0);
 
-        PriorityQueue<Edge> priorityQueue = new PriorityQueue<Edge>(edges.length, new Edge());
+        PriorityQueue<Edge> priorityQueue = new PriorityQueue<>(edges.length, new Edge());
         priorityQueue.add(node);
         distance[index] = 0;
 
@@ -95,8 +98,8 @@ public class Navigation {
 
         ArrayList<Edge> path = new ArrayList<>();
         assemble(parent, path, current.getId(), target.getId() - 1);
-        if (current != target)
-            path.add(target);
+        path.add(target);
+
         return path.toArray(Edge[]::new);
     }
 

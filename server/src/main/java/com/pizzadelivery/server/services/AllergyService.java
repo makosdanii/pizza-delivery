@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AllergyService implements ServiceORM<Allergy> {
+public class AllergyService extends ServiceORM<Allergy> {
     AllergyRepository allergyRepository;
 
     @Autowired

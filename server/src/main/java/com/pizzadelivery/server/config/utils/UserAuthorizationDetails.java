@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.config;
+package com.pizzadelivery.server.config.utils;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;

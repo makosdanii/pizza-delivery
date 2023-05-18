@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.Car;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,29 +39,26 @@ public class CarController extends Controller {
         return new ResponseEntity<>(car, car.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyAuthority('admin', 'driver')")
     @GetMapping
     public Iterable<Car> listCar() {
-        return carService.listAll();
+        var isAdmin = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new SimpleGrantedAuthority("admin"));
+        return carService.listAll(isAdmin);
     }
 
     @PreAuthorize("hasAuthority('admin')")
     @PostMapping("/add")
-    public ResponseEntity<Car> registerCar(@RequestBody @Valid Car car) {
-        try {
-            car = carService.createCar(car);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Car());
-        }
-        return new ResponseEntity<>(car, HttpStatus.CREATED);
+    public ResponseEntity<Car> registerCar(@RequestBody @Valid Car car) throws AlreadyExistsException {
+        return new ResponseEntity<>(carService.createCar(car), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'driver')")
     @PutMapping("/{id}")
-    public ResponseEntity<Car> updateCar(@PathVariable @Positive int id, @RequestBody @Valid Car car) {
-        try {
-            car = carService.updateCar(id, car);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Car());
+    public ResponseEntity<Car> updateCar(@PathVariable @Positive int id, @RequestBody @Valid Car car) throws AlreadyExistsException {
+        car = carService.updateCar(id, car);
+        if (car.getId() != UNASSIGNED) {
+            carService.persist(car);
         }
 
         return new ResponseEntity<>(car, car.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);

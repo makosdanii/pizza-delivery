@@ -1,5 +1,6 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @org.springframework.stereotype.Controller
 public class Controller {
     @ExceptionHandler({ConstraintViolationException.class, MethodArgumentNotValidException.class,
-            org.hibernate.exception.ConstraintViolationException.class})
+            org.hibernate.exception.ConstraintViolationException.class, AlreadyExistsException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> handleException(Exception e) {
         return new ResponseEntity<>("Invalid request: " + e.getMessage(), HttpStatus.BAD_REQUEST);

@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import server from "../../business/PizzaServerAPI.vue";
+import server from "../../business/PizzaServerAPI.js";
 import DataTable from "../DataTable.vue";
 import * as yup from "yup";
 import _ from "lodash";
@@ -74,18 +74,32 @@ export default {
                       if (promise.status === 201) {
                         server.listMenus().then(promise => this.menus = promise.data)
                         this.$refs.table.snackText = "Created"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
                 :
                 server.updateMenu(this.editedItem)
                     .then((promise) => {
                       if (promise.status === 201) {
                         server.listMenus().then(promise => this.menus = promise.data)
                         this.$refs.table.snackText = "Updated"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
 
             this.reset()
           })
@@ -105,6 +119,13 @@ export default {
           if (promise.status === 200) {
             server.listMenus().then(promise => this.menus = promise.data)
             this.$refs.table.snackText = "Deleted"
+            this.$refs.table.color = "green"
+            this.$refs.table.snack = true
+          }
+        }).catch(err => {
+          if (err.response.status === 400 || err.response.status === 401) {
+            this.$refs.table.snackText = "Operation denied"
+            this.$refs.table.color = "red"
             this.$refs.table.snack = true
           }
         });
@@ -134,13 +155,11 @@ export default {
   },
 
   mounted() {
-    let authorized = false
     if (this.role === 'admin' || this.role === 'chef') {
       this.headers = [{title: "Actions", key: "actions", sortable: false}]
-      authorized = true;
     }
-    if (this.role.length || authorized) {
-      this.headers = [{title: "Add", key: "id"}, ...this.headers]
+    if (this.role === 'customer') {
+      this.headers = [{title: "Add", key: "id"}]
     }
     this.headers = [
       {title: "Name", key: "name"},

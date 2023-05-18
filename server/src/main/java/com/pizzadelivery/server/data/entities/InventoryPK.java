@@ -17,6 +17,9 @@ public class InventoryPK implements Serializable {
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
     private Car carByCarId;
+    @ManyToOne
+    @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
+    private Ingredient ingredientByIngredientId;
 
     public Timestamp getModifiedAt() {
         return modifiedAt;
@@ -34,25 +37,41 @@ public class InventoryPK implements Serializable {
         this.carByCarId = carByCarId;
     }
 
+    public Ingredient getIngredientByIngredientId() {
+        return ingredientByIngredientId;
+    }
+
+    public void setIngredientByIngredientId(Ingredient ingredientByIngredientId) {
+        this.ingredientByIngredientId = ingredientByIngredientId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InventoryPK inventory = (InventoryPK) o;
-        return Objects.equals(modifiedAt, inventory.modifiedAt);
+        return Objects.equals(modifiedAt, inventory.modifiedAt)
+                && carByCarId.equals(inventory.carByCarId)
+                && ingredientByIngredientId.equals(inventory.ingredientByIngredientId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(modifiedAt);
+        return Objects.hash(modifiedAt, carByCarId, ingredientByIngredientId);
     }
 
     public InventoryPK() {
         modifiedAt = new Timestamp(System.currentTimeMillis());
     }
 
-    public InventoryPK(Car carByCarId) {
+    public InventoryPK(Ingredient ingredientByIngredientId) {
+        modifiedAt = new Timestamp(System.currentTimeMillis());
+        this.ingredientByIngredientId = ingredientByIngredientId;
+    }
+
+    public InventoryPK(Car carByCarId, Ingredient ingredientByIngredientId) {
         modifiedAt = new Timestamp(System.currentTimeMillis());
         this.carByCarId = carByCarId;
+        this.ingredientByIngredientId = ingredientByIngredientId;
     }
 }

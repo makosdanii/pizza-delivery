@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import server from "../../business/PizzaServerAPI.vue";
+import server from "../../business/PizzaServerAPI.js";
 import DataTable from "../DataTable.vue";
 import * as yup from "yup";
 import _ from "lodash";
@@ -78,18 +78,32 @@ export default {
                       if (promise.status === 201) {
                         this.listUsers()
                         this.$refs.table.snackText = "Created"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
                 :
                 server.updateUser(this.editedItem)
                     .then((promise) => {
                       if (promise.status === 201) {
                         this.listUsers()
                         this.$refs.table.snackText = "Updated"
+                        this.$refs.table.color = "green"
                         this.$refs.table.snack = true
                       }
-                    })
+                    }).catch(err => {
+                  if (err.response.status === 400 || err.response.status === 401) {
+                    this.$refs.table.snackText = "Operation denied"
+                    this.$refs.table.color = "red"
+                    this.$refs.table.snack = true
+                  }
+                })
 
             this.reset()
           })
@@ -109,6 +123,13 @@ export default {
           if (promise.status === 200) {
             this.listUsers()
             this.$refs.table.snackText = "Deleted"
+            this.$refs.table.color = "green"
+            this.$refs.table.snack = true
+          }
+        }).catch(err => {
+          if (err.response.status === 400 || err.response.status === 401) {
+            this.$refs.table.snackText = "Operation denied"
+            this.$refs.table.color = "red"
             this.$refs.table.snack = true
           }
         });

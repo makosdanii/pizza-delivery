@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.Allergy;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
@@ -40,23 +40,13 @@ public class AllergyController extends Controller {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Allergy> registerAllergy(@RequestBody @Valid Allergy allergy) {
-        try {
-            allergy = allergyService.createAllergy(allergy);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Allergy());
-        }
-        return new ResponseEntity<>(allergy, HttpStatus.CREATED);
+    public ResponseEntity<Allergy> registerAllergy(@RequestBody @Valid Allergy allergy) throws AlreadyExistsException {
+        return new ResponseEntity<>(allergyService.createAllergy(allergy), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Allergy> updateAllergy(@PathVariable @Positive int id, @RequestBody @Valid Allergy allergy) {
-        try {
-            allergy = allergyService.updateAllergy(id, allergy);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Allergy());
-        }
-
+    public ResponseEntity<Allergy> updateAllergy(@PathVariable @Positive int id, @RequestBody @Valid Allergy allergy) throws AlreadyExistsException {
+        allergy = allergyService.updateAllergy(id, allergy);
         return new ResponseEntity<>(allergy, allergy.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RoleService implements ServiceORM<Role> {
+public class RoleService extends ServiceORM<Role> {
     RoleRepository roleRepository;
 
     @Autowired

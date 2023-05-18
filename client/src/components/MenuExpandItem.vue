@@ -22,9 +22,8 @@
                 chips
             >
               <template v-slot:item="{ item }">
-                <v-checkbox v-model="selected" :value="item.raw.name" @click="select"/>
-                {{ item.raw.name }}
-                {{ selected.includes(item.raw.name) ? ` ${selectedQuantity(item.raw.name)} dkg` : "" }}
+                <v-checkbox v-model="selected" :value="item.raw.name" @click="select"
+                            :label="label(item.raw.name)"/>
               </template>
             </v-select>
           </v-col>
@@ -44,7 +43,7 @@
 <script>
 import _ from "lodash";
 import * as yup from "yup";
-import server from "@/business/PizzaServerAPI.vue";
+import server from "@/business/PizzaServerAPI.js";
 
 const defaultItem = {
   ingredientByIngredientId: {
@@ -68,11 +67,15 @@ export default {
           .filter(allergy => allergy)
     },
     computeIngredients() {
-      console.log(this.menuIngredients)
       return this.ingredients;
     }
   },
   methods: {
+    label(name) {
+      if (this.selected.includes(name))
+        name = name.concat(` - ${this.selectedQuantity(name)} dkg`)
+      return name
+    },
     selectedQuantity(id) {
       const selectedIngredient = this.menuIngredients
           .filter(ingredient => id === ingredient.ingredientByIngredientId.name)
@@ -92,7 +95,13 @@ export default {
                 this.snackText = "Unassigned"
                 this.snack = true
               }
-            })
+            }).catch(err => {
+          if (err.response.status === 400 || err.response.status === 401) {
+            this.$refs.table.snackText = "Operation denied"
+            this.$refs.table.color = "red"
+            this.$refs.table.snack = true
+          }
+        })
       }
     },
     cancel() {
@@ -116,7 +125,13 @@ export default {
                     this.snackText = "Assigned"
                     this.snack = true
                   }
-                })
+                }).catch(err => {
+              if (err.response.status === 400 || err.response.status === 401) {
+                this.$refs.table.snackText = "Operation denied"
+                this.$refs.table.color = "red"
+                this.$refs.table.snack = true
+              }
+            })
           })
           .catch((err) => {
             err.inner.forEach((error) => {

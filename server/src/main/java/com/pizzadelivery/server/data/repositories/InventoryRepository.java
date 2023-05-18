@@ -7,9 +7,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
 import java.util.List;
 
 @Repository
 public interface InventoryRepository extends CrudRepository<Inventory, InventoryPK> {
-    public List<Inventory> findByIngredientByIngredientId(Ingredient ingredient, Sort sort);
+    public List<Inventory> findByIdIngredientByIngredientId(Ingredient ingredient, Sort sort);
+
+    public List<Inventory> findAll();
+
+    public List<Inventory> findAllByIdModifiedAtBefore(Date before);
 }

@@ -1,5 +1,8 @@
 package com.pizzadelivery.server.config;
 
+import com.pizzadelivery.server.config.filter.CorsRequestFilter;
+import com.pizzadelivery.server.config.filter.JwtEntryPoint;
+import com.pizzadelivery.server.config.filter.JwtRequestFilter;
 import com.pizzadelivery.server.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,12 +38,17 @@ public class BasicConfiguration {
     private final UserService userDetailsService;
     private final JwtEntryPoint jwtEntryPoint;
     private final JwtRequestFilter jwtRequestFilter;
+    private final CorsRequestFilter corsRequestFilter;
 
     @Autowired
-    public BasicConfiguration(@Lazy UserService userDetailsService, JwtEntryPoint jwtEntryPoint, JwtRequestFilter jwtRequestFilter) {
+    public BasicConfiguration(@Lazy UserService userDetailsService,
+                              JwtEntryPoint jwtEntryPoint,
+                              JwtRequestFilter jwtRequestFilter,
+                              CorsRequestFilter corsRequestFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtEntryPoint = jwtEntryPoint;
         this.jwtRequestFilter = jwtRequestFilter;
+        this.corsRequestFilter = corsRequestFilter;
     }
 
     @Value("${salt}")
@@ -71,11 +79,14 @@ public class BasicConfiguration {
             new AntPathRequestMatcher("/user/register"),
             new AntPathRequestMatcher("/authenticate"),
             new AntPathRequestMatcher("/menu"),
+            new AntPathRequestMatcher("/street"),
+            new AntPathRequestMatcher("/delivery/**"),
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(corsRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http
                 .cors()

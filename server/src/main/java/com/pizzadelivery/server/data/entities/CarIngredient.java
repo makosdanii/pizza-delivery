@@ -48,11 +48,6 @@ public class CarIngredient {
         this.id = new CarIngredientPK();
     }
 
-    public CarIngredient(int currentQuantity, Ingredient ingredientByIngredientId) {
-        this.id = new CarIngredientPK(ingredientByIngredientId);
-        this.currentQuantity = currentQuantity;
-    }
-
     public CarIngredient(int currentQuantity, Ingredient ingredientByIngredientId, Car carByCarId) {
         this.id = new CarIngredientPK(ingredientByIngredientId);
         id.setCarByCarId(carByCarId);

@@ -1,5 +1,6 @@
-package com.pizzadelivery.server.config;
+package com.pizzadelivery.server.config.filter;
 
+import com.pizzadelivery.server.config.utils.JwtTokenUtil;
 import com.pizzadelivery.server.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;

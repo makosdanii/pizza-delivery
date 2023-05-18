@@ -1,6 +1,6 @@
 <template>
   <h2>{{ welcome }}</h2>
-  <v-window show-arrows="hover" v-model="stepper" class="window">
+  <v-window show-arrows="hover" v-model="stepper" class="window" v-if="role === 'customer'">
     <template v-slot:prev="{ props }">
       <v-btn
           prepend-icon="mdi-chevron-left"
@@ -58,7 +58,6 @@
             <template v-slot:append>
               &nbsp;- {{ basket.filter(i => i.id === item.id).length }}x
             </template>
-            <!--            <v-list-item-title v-text="item.name"></v-list-item-title>-->
           </v-list-item>
         </v-list>
       </v-card>
@@ -121,19 +120,25 @@
             class="text-h3"
         >
           Your order is getting delivered!
-          {{ confetti }}
         </h3>
+        <div class="margin padding">
+          {{ wsMessage }}
+          <br/>
+          <ul ref="menus" class="repeating-counter-rule">
+          </ul>
+        </div>
+        {{ confetti }}
       </v-card>
     </v-window-item>
   </v-window>
-  <!--  <Map/>-->
-  <v-snackbar v-model="snack" :timeout="3000">{{ snackText }}</v-snackbar>
+  <Map/>
+  <v-snackbar v-model="snack" :color="color" :timeout="3000">{{ snackText }}</v-snackbar>
 </template>
 
 <script>
 import Map from "@/components/Map.vue";
-import server from "@/business/PizzaServerAPI.vue"
-import {id} from "@/business/PizzaServerAPI.vue";
+import server from "@/business/PizzaServerAPI.js"
+import socket from "@/business/PizzaServerWebsocket.js";
 import _ from "lodash";
 import JSConfetti from 'js-confetti'
 
@@ -155,22 +160,23 @@ export default {
       errors: {},
       basket: [],
       streets: [],
+      wsMessages: [],
+      wsMessage: "",
       user: {},
       time: 0,
       snack: false,
-      snackText: ""
+      snackText: "",
+      color: ""
     }
   },
   methods: {
     //does not let qt per menu to grow over 5
     add(id) {
-      console.log(id)
       const items = this.basket.filter(i => i.id === id)
       if (items.length >= 5)
         this.basket = this.basket.filter(item => item.id !== items[0].id)
 
       this.basket.push(items[0])
-      console.log(this.basket)
     },
     async next(props) {
       //only validates at the third card
@@ -201,6 +207,7 @@ export default {
           menuByMenuId,
           userByUserId
         }))
+
         server.placeOrder(orders).then(promise => {
           this.time = promise.data
           if (this.time) {
@@ -209,6 +216,7 @@ export default {
             props.onClick()
           } else {
             this.snackText = "Order cannot be delivered at the moment"
+            this.color = "red"
             this.snack = true
           }
         })
@@ -242,7 +250,6 @@ export default {
       return `You selected ${this.basket.length} menus`
     },
     basketItems() {
-      console.log(_.uniqBy(this.basket, 'name'))
       return _.uniqBy(this.basket, 'name')
     },
     confetti() {
@@ -250,12 +257,33 @@ export default {
     },
   },
   mounted() {
-    if (!id()) return;
+    if (!server.id()) return;
 
-    server.findUser().then(promise => this.user = promise.data)
+    server.findUser().then(promise => {
+      this.user = promise.data
+      if (this.user.streetNameByStreetNameId && this.user.houseNo) {
+        this.address = {
+          streetNameByStreetNameId: this.user.streetNameByStreetNameId,
+          houseNo: this.user.houseNo
+        }
+      }
+    })
     this.orders.forEach(id => server.findMenu(id)
         .then(promise => this.basket.push(promise.data)).catch(err => console.log(err)))
     server.readStreets().then(promise => this.streets = promise.data)
+
+    socket.connect((message) => {
+      if (this.wsMessage.includes("Arrived")) {
+        const li = document.createElement('li')
+        li.append(message.body)
+        this.$refs.menus.appendChild(li)
+      } else {
+        this.wsMessage = message.body
+      }
+    })
+  },
+  unmounted() {
+    socket.disconnect()
   }
 }
 </script>
@@ -269,5 +297,15 @@ export default {
 .stepper-card {
   padding-left: 100px;
   padding-right: 150px;
+}
+
+@counter-style repeating-emoji {
+  system: cyclic;
+  symbols: "\01F355";
+  suffix: " ";
+}
+
+.repeating-counter-rule {
+  list-style-type: repeating-emoji;
 }
 </style>

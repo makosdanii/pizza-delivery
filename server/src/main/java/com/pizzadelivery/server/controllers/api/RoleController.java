@@ -1,4 +1,4 @@
-package com.pizzadelivery.server.controllers;
+package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.Role;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
@@ -40,23 +40,13 @@ public class RoleController extends Controller {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Role> registerRole(@RequestBody @Valid Role role) {
-        try {
-            role = roleService.createRole(role);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Role());
-        }
-        return new ResponseEntity<>(role, HttpStatus.CREATED);
+    public ResponseEntity<Role> registerRole(@RequestBody @Valid Role role) throws AlreadyExistsException {
+        return new ResponseEntity<>(roleService.createRole(role), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Role> updateRole(@PathVariable @Positive int id, @RequestBody @Valid Role role) {
-        try {
-            role = roleService.updateRole(id, role);
-        } catch (AlreadyExistsException e) {
-            return ResponseEntity.ok(new Role());
-        }
-
+    public ResponseEntity<Role> updateRole(@PathVariable @Positive int id, @RequestBody @Valid Role role) throws AlreadyExistsException {
+        role = roleService.updateRole(id, role);
         return new ResponseEntity<>(role, role.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }
 

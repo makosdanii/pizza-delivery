@@ -16,8 +16,47 @@ export default {
       style: this.url,
       center: [19.047, 47.493],
       zoom: 12.85,
-      pitch: 70.0
+      pitch: 70.0,
+      bearing: 15,
     })
+
+    map.on('load', () => {
+      map.loadImage(
+          'src/assets/marker.png',
+          (error, image) => {
+            if (error) throw error;
+            map.addImage('pizza', image);
+// Add a data source containing one point feature.
+            map.addSource('point', {
+              'type': 'geojson',
+              'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                  {
+                    'type': 'Feature',
+                    'geometry': {
+                      'type': 'Point',
+                      'coordinates': [19.0535, 47.4762]
+                    }
+                  }
+                ]
+              }
+            });
+
+// Add a layer to use the image to represent the data.
+            map.addLayer({
+              'id': 'points',
+              'type': 'symbol',
+              'source': 'point', // reference the data source
+              'layout': {
+                'icon-image': 'pizza', // reference the image
+                'icon-size': 0.5,
+
+              }
+            });
+          }
+      );
+    });
   }
 }
 </script>
