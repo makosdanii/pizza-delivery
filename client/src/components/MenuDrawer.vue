@@ -89,7 +89,7 @@
             <v-btn v-if="role === 'admin' && !mini" icon="mdi-microsoft-excel" variant="tonal" color="green-darken-4"
                    v-bind="props"/>
           </template>
-          <v-card height="350px">
+          <v-card height="400px">
             <h2 class="margin">Print records before:</h2>
             <vue3-datepicker-esm class="margin" v-model="picked"/>
             <v-spacer/>

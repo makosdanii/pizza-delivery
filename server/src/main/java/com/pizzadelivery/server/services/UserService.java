@@ -57,10 +57,10 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findByEmail(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        var user = userRepository.findByEmail(email);
 
-        if (user.isEmpty()) throw new UsernameNotFoundException(username);
+        if (user.isEmpty()) throw new UsernameNotFoundException(email);
 
         List<GrantedAuthority> authority = List.of(
                 new SimpleGrantedAuthority(user.get(0).getRoleByRoleId().getName().toLowerCase()));
@@ -96,9 +96,14 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
         User old = userRepository.findById(id).orElse(new User());
         if (old.getId() != UNASSIGNED) {
             checkConstraint(user, !old.getEmail().equals(user.getEmail()));
-            user.setId(id);
-            user.setPassword(passwordEncoder.encode(user.getPassword().trim()));
-            return userRepository.save(user);
+
+            old.setEmail(user.getEmail());
+            old.setPassword(passwordEncoder.encode(user.getPassword().trim()));
+            old.setName(user.getName());
+            old.setRoleByRoleId(user.getRoleByRoleId());
+            old.setStreetNameByStreetNameId(user.getStreetNameByStreetNameId());
+            old.setHouseNo(user.getHouseNo());
+            return userRepository.save(old);
         }
         return old;
     }
@@ -112,6 +117,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
         return true;
     }
 
+    // using food order type because that stores user and its address
     public Integer placeOrder(int id, List<FoodOrder> foodOrders) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ConstraintViolationException("Invalid user id", new HashSet<>()));
@@ -148,28 +154,29 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
             throw new AlreadyExistsException();
         }
 
-        Role customer = null;
-        try {
-            customer = roleRepository.findByName("customer").get(0);
-        } catch (IndexOutOfBoundsException e) {
-            throw new ConstraintViolationException("Necessary role is yet to be created", new HashSet<>());
-        }
+        var role = roleRepository.findById(user.getRoleByRoleId().getId()).orElseThrow(() ->
+                new ConstraintViolationException("Invalid ID", new HashSet<>()));
 
         //if there's no authenticated user then only customer user can be created
-        if (!SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            Role customer = null;
+            try {
+                customer = roleRepository.findByName("customer").get(0);
+            } catch (IndexOutOfBoundsException e) {
+                throw new ConstraintViolationException("Necessary role is yet to be created", new HashSet<>());
+            }
             user.setRoleByRoleId(customer);
+        } else if (SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new SimpleGrantedAuthority("admin"))) {
+            user.setRoleByRoleId(role);
         } else {
-            var role = roleRepository.findById(user.getRoleByRoleId().getId());
-            if (role.isPresent()) {
-                var sufficientAuthentication = new SimpleGrantedAuthority(role.get().getName());
+            var sufficientAuthentication = new SimpleGrantedAuthority(role.getName());
 
-                if (!SecurityContextHolder.getContext().getAuthentication()
-                        .getAuthorities().contains(sufficientAuthentication) &&
-                        !SecurityContextHolder.getContext().getAuthentication()
-                                .getAuthorities().contains(new SimpleGrantedAuthority("admin")))
-                    throw new ConstraintViolationException("Forbidden role modification", new HashSet<>());
+            if (!SecurityContextHolder.getContext().getAuthentication()
+                    .getAuthorities().contains(sufficientAuthentication)) {
+                throw new ConstraintViolationException("Forbidden role modification", new HashSet<>());
             } else {
-                user.setRoleByRoleId(customer);
+                user.setRoleByRoleId(role);
             }
         }
 
@@ -179,6 +186,8 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
                 throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
             } else if (user.getHouseNo() > street.getUntilNo()) {
                 throw new ConstraintViolationException("Invalid address", new HashSet<>());
+            } else {
+                user.setStreetNameByStreetNameId(street);
             }
         }
     }

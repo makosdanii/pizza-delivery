@@ -59,7 +59,9 @@ public class Dispatcher {
 
     @PostConstruct
     private void initialize() {
-        inventoryService.fillInventory().forEach(inventoryService::persist);
+        inventoryService.fillInventory().forEach(inventory -> {
+            if (inventory != null) inventoryService.persist(inventory);
+        });
         log("Inventory filled");
     }
 
@@ -87,7 +89,7 @@ public class Dispatcher {
         Edge orderEdge = findOrderEdge(foodOrders.get(0).getUserByUserId());
 
         // sort cars idle cars with drivers by their distance to orderEdge cached?
-        var availableCars = sortAvailableCar(orderEdge);
+        var availableCars = sortAvailableCars(orderEdge);
 
         // make union of foodOrders' ingredients then reduce them
         ArrayList<MenuIngredient> sumMenuIngredients = summarizeMenuIngredient(foodOrders);
@@ -169,7 +171,7 @@ public class Dispatcher {
         executorService.submit(task);
     }
 
-    private List<Car> sortAvailableCar(Edge finalOrderEdge) {
+    private List<Car> sortAvailableCars(Edge finalOrderEdge) {
         // at start, it's likely that every car is occupied with filling ingredients for a while
         updateFleetLocation();
 
@@ -286,7 +288,9 @@ public class Dispatcher {
             throw new RuntimeException(e);
         }
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        inventoryService.fillInventory().forEach(inventoryService::persist);
+        inventoryService.fillInventory().forEach(inventory -> {
+            if (inventory != null) inventoryService.persist(inventory);
+        });
         log("Dispatcher is active");
         return 0;
     }

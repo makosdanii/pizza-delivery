@@ -114,7 +114,7 @@ export default {
                     this.$refs.table.snack = true
                   }
                 }).catch(err => {
-              if (err.response.status === 400 || err.response.status === 401) {
+              if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
                 this.$refs.table.snackText = "Operation denied"
                 this.$refs.table.color = "red"
                 this.$refs.table.snack = true
@@ -129,13 +129,11 @@ export default {
           });
     },
     eraseInventory(item) {
-      server.deleteInventory({
-        carByCarId: {id: item.carByCarId.id}, modifiedAt: item.modifiedAt,
-        ingredientByIngredientId: {id: item.ingredientByIngredientId.id}
-      })
+      server.deleteInventory(item.ingredientByIngredientId.id
+      )
           .then(promise => this.items = promise.data)
           .catch(err => {
-            if (err.response.status === 400 || err.response.status === 401) {
+            if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
               this.$refs.table.snackText = "Operation denied"
               this.$refs.table.color = "red"
               this.$refs.table.snack = true
@@ -149,7 +147,7 @@ export default {
               this.items = promise.data.map(item => ({...item, number: item.id}))
           })
           .catch(err => {
-            if (err.response.status === 400 || err.response.status === 401) {
+            if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
               this.$refs.table.snackText = "Operation denied"
               this.$refs.table.color = "red"
               this.$refs.table.snack = true

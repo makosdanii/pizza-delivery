@@ -42,7 +42,7 @@
         <v-btn @click="save">Save</v-btn>
       </v-col>
       <v-col cols="12" sm="6" md="4">
-        <v-btn color="red" v-if="role.length" @click="erase">Delete</v-btn>
+        <v-btn color="red" v-if="role.length" @click="erase" :disabled="role === 'admin'">Delete</v-btn>
       </v-col>
     </v-container>
     <v-list v-if="role === 'customer'">
@@ -154,8 +154,8 @@ export default {
                 this.snack = true
               }
             }).catch(err => {
-          if (err.response.status === 400 || err.response.status === 401) {
-            this.snackText = "Operation denied"
+          if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
+            this.snackText = "Email is already linked to a account"
             this.color = "red"
             this.snack = true
           }
@@ -172,8 +172,8 @@ export default {
                 this.snack = true
               }
             }).catch(err => {
-          if (err.response.status === 400 || err.response.status === 401) {
-            this.snackText = "Operation denied"
+          if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
+            this.snackText = "Email is already linked to a account"
             this.color = "red"
             this.snack = true
           }
@@ -193,8 +193,8 @@ export default {
             this.snack = true
           }
         }).catch(err => {
-          if (err.response.status === 400 || err.response.status === 401) {
-            this.snackText = "Operation denied"
+          if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
+            this.snackText = "Still linked to a car"
             this.color = "red"
             this.snack = true
           }

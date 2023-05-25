@@ -30,7 +30,6 @@ public class RoleController extends Controller {
     @GetMapping("/{id}")
     public ResponseEntity<Role> findRole(@PathVariable @Positive int id) {
         Role role = roleService.findRole(id);
-
         return new ResponseEntity<>(role, role.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
@@ -39,7 +38,7 @@ public class RoleController extends Controller {
         return roleService.listAll();
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Role> registerRole(@RequestBody @Valid Role role) throws AlreadyExistsException {
         return new ResponseEntity<>(roleService.createRole(role), HttpStatus.CREATED);
     }

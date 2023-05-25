@@ -34,8 +34,7 @@ public class CarController extends Controller {
     @PreAuthorize("hasAuthority('admin')")
     @GetMapping("/{id}")
     public ResponseEntity<Car> findCar(@PathVariable @Positive int id) {
-        Car car = carService.findCar(id).orElse(new Car());
-
+        Car car = carService.findCar(id);
         return new ResponseEntity<>(car, car.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
@@ -48,7 +47,7 @@ public class CarController extends Controller {
     }
 
     @PreAuthorize("hasAuthority('admin')")
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Car> registerCar(@RequestBody @Valid Car car) throws AlreadyExistsException {
         return new ResponseEntity<>(carService.createCar(car), HttpStatus.CREATED);
     }

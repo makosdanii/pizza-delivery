@@ -11,7 +11,6 @@ import java.util.Objects;
 
 @Entity
 public class Menu {
-    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -26,7 +25,7 @@ public class Menu {
     private int price;
     @JsonManagedReference
     @UniqueElements
-    @OneToMany(mappedBy = "id.menuByMenuId")
+    @OneToMany(mappedBy = "id.menuByMenuId", orphanRemoval = true)
     private Collection<MenuIngredient> menuIngredientsById;
 
     public int getId() {

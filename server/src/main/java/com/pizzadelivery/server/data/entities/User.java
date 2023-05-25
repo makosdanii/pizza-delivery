@@ -2,10 +2,12 @@ package com.pizzadelivery.server.data.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -30,9 +32,10 @@ public class User {
     @NotBlank
     @Column(name = "password", nullable = false, length = 128)
     private String password;
+    @Null(groups = NonValidatedOnPersistTime.class)
     @JsonIgnore
-    @OneToMany(mappedBy = "userByUserId")
-    private Collection<Car> carsById;
+    @OneToOne(mappedBy = "userByUserId")
+    private Car carByCarId;
     @JsonIgnore
     @OneToMany(mappedBy = "userByUserId", orphanRemoval = true)
     private Collection<FoodOrder> foodOrdersById;
@@ -92,12 +95,12 @@ public class User {
         return Objects.hash(id);
     }
 
-    public Collection<Car> getCarsById() {
-        return carsById;
+    public Car getCarByCarId() {
+        return carByCarId;
     }
 
-    public void setCarsById(Collection<Car> carsById) {
-        this.carsById = carsById;
+    public void setCarByCarId(Car carsById) {
+        this.carByCarId = carsById;
     }
 
     public Collection<FoodOrder> getFoodOrdersById() {

@@ -4,7 +4,6 @@ import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.User;
 import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
-import com.pizzadelivery.server.services.RoleService;
 import com.pizzadelivery.server.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -25,13 +24,11 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 @CrossOrigin
 @RequestMapping(path = "/user")
 public class UserController extends Controller {
-    private UserService userService;
-    private RoleService roleService;
+    private final UserService userService;
 
     @Autowired
-    public UserController(UserService userService, RoleService roleService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.roleService = roleService;
     }
 
     @PreAuthorize("hasAuthority('admin') || principal.getId() == #id")
@@ -70,6 +67,6 @@ public class UserController extends Controller {
     public ResponseEntity<Integer> placeOrder(@PathVariable @Positive @P("id") int id,
                                               @RequestBody @Validated(NonValidatedOnPersistTime.class) List<FoodOrder> foodOrders) {
         var order = userService.placeOrder(id, foodOrders);
-        return new ResponseEntity<>(order, order > 0 ? HttpStatus.CREATED : HttpStatus.OK);
+        return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 }

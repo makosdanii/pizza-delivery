@@ -10,7 +10,6 @@ import java.util.Objects;
 
 @Entity
 public class Car {
-    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -19,7 +18,7 @@ public class Car {
     @NotBlank
     @Column(name = "license", nullable = true, length = 16, unique = true)
     private String license;
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
     private User userByUserId;
     @JsonIgnore

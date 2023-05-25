@@ -1,10 +1,6 @@
+const axios = require("axios");
 const token = "pk.eyJ1IjoibWFrb3NkYW5paSIsImEiOiJjbGdhb21hNHQxMndwM2xwaWUxOXY0bGU5In0.QCQaAMl0L4JC4gkOyTBzAg"
 const url = "https://api.mapbox.com/datasets/v1/makosdanii/clgb4eeme00ka2oqkh6n0mq1i/features?access_token=" + token
-const axios = require('axios')
-
-console.log("delete from map where true;")
-console.log("delete from edge where true;")
-console.log("delete from street_name where true;")
 const normalizeStreets = (arr) => {
     let streetNames = [];
     let foreignKeyCol = [];
@@ -38,9 +34,9 @@ const insertIntoStreetName = (arr) => {
 }
 
 const insertIntoEdge = (arr, streetNames) => {
-    console.log("INSERT INTO edge(id, vertex, edge_name, edge_weight) values")
+    console.log("INSERT INTO edge(id, vertex, street_name_id, edge_weight) values")
 
-    //if API provides multiple edges for a street then it provides until_no. for each as well 
+    //if API provides multiple edges for a street then it provides until_no. for each as well
     for (const {adj, edge_name, edge_weight, id, until} of arr.slice(0, arr.length - 1)) {
         console.log(`(${id}, ${until == null ? streetNames[edge_name - 1].until : until}, ${edge_name}, ${edge_weight}),`)
     }
@@ -69,6 +65,11 @@ const insertIntoMap = (arr) => {
     }
     console.log(`(${id}, ${adjs[adjs.length - 1].trim()});`)
 }
+
+console.log("USE pizza_delivery;")
+console.log("delete from map where true;")
+console.log("delete from edge where true;")
+console.log("delete from street_name where true;")
 
 axios.get(url).then(resp => {
     let data = Object.values(resp.data.features).map(obj => obj.properties);

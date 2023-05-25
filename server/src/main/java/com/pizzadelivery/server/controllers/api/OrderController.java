@@ -1,7 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.data.entities.FoodOrder;
-import com.pizzadelivery.server.data.entities.OrderDelivery;
 import com.pizzadelivery.server.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -38,11 +37,5 @@ public class OrderController {
         var orders = orderService.deleteOrder(id);
         if (!orders.iterator().hasNext()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return orders;
-    }
-
-    @PreAuthorize("hasAuthority('admin')")
-    @GetMapping("/delivery")
-    public Iterable<OrderDelivery> readOrderDelivery(@RequestParam(required = false) Date before) {
-        return orderService.readDeliveries(before);
     }
 }

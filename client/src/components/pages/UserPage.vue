@@ -40,6 +40,11 @@
         </v-row>
       </v-container>
     </template>
+    <template #error><b>Users</b> should be unique by <b>email</b>. <br/> When deleting please make sure that it is
+      no
+      longer
+      referenced by any <b>cars</b>.
+    </template>
   </DataTable>
 </template>
 
@@ -82,7 +87,7 @@ export default {
                         this.$refs.table.snack = true
                       }
                     }).catch(err => {
-                  if (err.response.status === 400 || err.response.status === 401) {
+                  if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
                     this.$refs.table.snackText = "Operation denied"
                     this.$refs.table.color = "red"
                     this.$refs.table.snack = true
@@ -98,7 +103,7 @@ export default {
                         this.$refs.table.snack = true
                       }
                     }).catch(err => {
-                  if (err.response.status === 400 || err.response.status === 401) {
+                  if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
                     this.$refs.table.snackText = "Operation denied"
                     this.$refs.table.color = "red"
                     this.$refs.table.snack = true
@@ -127,7 +132,7 @@ export default {
             this.$refs.table.snack = true
           }
         }).catch(err => {
-          if (err.response.status === 400 || err.response.status === 401) {
+          if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
             this.$refs.table.snackText = "Operation denied"
             this.$refs.table.color = "red"
             this.$refs.table.snack = true

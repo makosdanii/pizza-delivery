@@ -27,10 +27,10 @@ public class MenuController extends Controller {
         this.menuService = menuService;
     }
 
+    @PreAuthorize("hasAnyAuthority('admin', 'chef', 'customer')")
     @GetMapping("/{id}")
     public ResponseEntity<Menu> findMenu(@PathVariable @Positive int id) {
         Menu menu = menuService.findMenu(id);
-
         return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
@@ -40,14 +40,15 @@ public class MenuController extends Controller {
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Menu> registerMenu(@RequestBody @Valid Menu menu) throws AlreadyExistsException {
         return new ResponseEntity<>(menuService.createMenu(menu), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyAuthority('admin', 'chef')")
-    @PostMapping("/{id}")
-    public ResponseEntity<Menu> assignIngredient(@PathVariable @Positive int id, @RequestBody @Valid MenuIngredient menuIngredient) {
+    @PutMapping("/{id}/ingredient")
+    public ResponseEntity<Menu> assignIngredient(@PathVariable @Positive int id,
+                                                 @RequestBody @Valid MenuIngredient menuIngredient) {
         Menu menu = menuService.assignIngredient(id, menuIngredient);
         return new ResponseEntity<>(menu, menu.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);
     }

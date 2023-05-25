@@ -1,0 +1,129 @@
+{"endpoint":{
+  "/user": {
+    "get": {"authorization": "admin, owner*"},
+    "/user/register": {"post":{
+        "body": "{email, name, password, (roleByRoleId)**, (streetByStreetId), (houseNo)}"
+    }},
+    "/user/{id}": {
+      "get": {"authorization": "admin, owner*"},
+      "put": {
+        "authorization": "admin, owner",
+        "body": "{email, name, password, (roleByRoleId)**, (streetByStreetId), (houseNo)}"
+      },
+      "delete": {"authorization": "admin, owner*"}
+    },
+    "/user/{id}/order": {
+      "authorization": "owner*",
+      "method": "POST",
+      "body": "[{menuByMenuId, userByUserId***}]"
+    }
+  },
+  "/role": {
+    "get": {"authorization": "admin"},
+      "post": {
+        "authorization": "admin",
+        "body": "{name}"
+      },
+    "/role/{id}": {
+      "get": {"authorization": "admin"},
+      "put": {
+        "authorization": "admin",
+        "body": "{name}"
+      },
+      "delete": {"authorization": "admin"}
+    }
+  },
+  "/menu": {
+    "get": {},
+      "post": {
+        "authorization": "admin, chef",
+        "body": "{name, price}"
+      },
+    "/menu/{id}": {
+      "get": {"authorization": "admin, chef"},
+      "put": {
+        "authorization": "admin, chef",
+        "body": "{name, price}"
+      },
+      "delete": {"authorization": "admin, chef"}
+    },
+    "/menu/{id}/ingredient/": {
+      "put": {
+        "authorization": "admin, chef",
+        "body": "{ingredientByIngredientId, quantity}"
+      }
+    },
+    "/menu/{id}/{ingredientId}": {
+      "delete": {"authorization": "admin, chef"}
+    }
+  },
+  "/ingredient": {
+    "get": {"authorization": "admin, chef"},
+      "post": {
+        "authorization": "admin, chef",
+        "body": "{name, price, allergyByAllergyId?)}"
+      },
+    "/ingredient/{id}": {
+      "get": {"authorization": "admin, chef"},
+      "put": {
+        "authorization": "admin, chef",
+        "body": "{name, price, allergyByAllergyId?)}"
+      },
+      "delete": {"authorization": "admin, chef"}
+    }
+  },
+  "/allergy": {
+    "get": {"authorization": "admin, chef"},
+      "post": {
+        "authorization": "admin, chef",
+        "body": "{name}"
+      },
+    "/allergy/{id}": {
+      "get": {},
+      "put": {
+        "authorization": "admin, chef",
+        "body": "{name}"
+      },
+      "delete": {"authorization": "admin, chef"}
+    }
+  },
+    "/car": {
+      "get": {"authorization": "admin, driver"},
+      "post": {
+        "authorization": "admin",
+        "body": "{license, userByUserId?)}"
+      },
+      "/car/{id}": {
+        "get": {"authorization": "admin"},
+        "put": {
+          "authorization": "admin, driver",
+          "body": "{license****, userByUserId?)}"
+        },
+        "delete": {"authorization": "admin"}
+      }
+    },
+  "/inventory": {
+    "get": {"authorization": "admin", "parameter": "before?"},
+    "post": {"authorization":"admin", "body":"{expense, current, ingredientByIngredientId}"},
+    "/inventory/{ingredientId}": {
+      "delete":{
+        "authorization": "admin"
+      }
+    }
+  },
+  "/street": {
+    "get": {}
+  },
+  "/order": {
+    "get": {"authorization": "admin, customer", "parameter": "before?"},
+    "/order/{id}": {
+      "delete": {"authorization": "admin"}
+    }
+  },
+      "/delivery": {
+        "get": {
+            "authorization": "admin",
+            "parameter":"before?"
+          }
+      }
+}}

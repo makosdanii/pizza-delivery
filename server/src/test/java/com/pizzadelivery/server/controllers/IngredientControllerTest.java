@@ -1,6 +1,7 @@
 package com.pizzadelivery.server.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pizzadelivery.server.data.entities.Allergy;
 import com.pizzadelivery.server.data.entities.Ingredient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
@@ -8,20 +9,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-class IngredientControllerTest {
+class IngredientControllerTest extends ControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     private MockMvc mvc;
@@ -30,52 +27,68 @@ class IngredientControllerTest {
     void setUp() throws Exception {
         mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .build();
-        SecurityContextHolder.getContext()
-                .setAuthentication(new UsernamePasswordAuthenticationToken("admin@domain.com", "secret",
-                        List.of(new SimpleGrantedAuthority("admin"))));
     }
 
     @Order(1)
     @Test
     void registerIngredient() throws Exception {
-        var bad = new ObjectMapper().writeValueAsString(new Ingredient());
-        var valid = new ObjectMapper().writeValueAsString(new Ingredient("flour"));
-        var duplicate = new ObjectMapper().writeValueAsString(new Ingredient("flour"));
-//        var validWithAllergy = new ObjectMapper().writeValueAsString(new Ingredient("qwe-123",
-//                new User(11, "driver@domain.com")));
-//        var invalidllergy = new ObjectMapper().writeValueAsString(new Ingredient("xxx-123",
-//                new User(10, "notdriver@domain.com")));
+        var valid = new ObjectMapper().writeValueAsString(new Ingredient("cheese", 10));
+        var duplicate = new ObjectMapper().writeValueAsString(new Ingredient("cheese", 10));
+        var validWithAllergy = new ObjectMapper().writeValueAsString(new Ingredient("flour", 5,
+                new Allergy(1, "gluten")));
+        var inValidAllergy = new ObjectMapper().writeValueAsString(new Ingredient("flour", 5,
+                new Allergy(99, "invalid")));
+        authorize("admin@domain.com");
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/ingredient/add")
-                        .content(bad)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
-
-        mvc.perform(MockMvcRequestBuilders
-                        .post("/ingredient/add")
+                        .post("/ingredient")
                         .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/ingredient/add")
+                        .post("/ingredient")
                         .content(duplicate)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(MockMvcRequestBuilders
+                        .post("/ingredient")
+                        .content(validWithAllergy)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mvc.perform(MockMvcRequestBuilders
+                        .post("/ingredient")
+                        .content(inValidAllergy)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
-    void listIngredient() {
-    }
-
+    @Order(2)
     @Test
-    void updateIngredient() {
-    }
+    void updateIngredient() throws Exception {
+        var flour = new ObjectMapper().writeValueAsString(new Ingredient("ham", 10));
 
-    @Test
-    void deleteIngredient() {
+        authorize("admin@domain.com");
+
+        mvc.perform(MockMvcRequestBuilders
+                        .put("/ingredient/99")
+                        .content(flour)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(MockMvcRequestBuilders
+                        .put("/ingredient/2")
+                        .content(flour)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
     }
 }

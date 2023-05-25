@@ -13,6 +13,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest
 class AuthenticationControllerTest {
     @Autowired
@@ -20,21 +22,39 @@ class AuthenticationControllerTest {
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .build();
     }
 
     @Test
-    void authenticate() throws Exception {
+    void authenticateSuccessfully() throws Exception {
         var admin = new AuthenticationDTO("admin@domain.com", "secret");
-        var result = mvc.perform(MockMvcRequestBuilders
+        mvc.perform(MockMvcRequestBuilders
                         .post("/authenticate")
                         .content(new ObjectMapper().writeValueAsString(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(MockMvcResultMatchers.jsonPath("$.token").exists());
+    }
 
+    @Test
+    void authenticateUnsuccessfully() throws Exception {
+        var badCredentials = new AuthenticationDTO("admin@domain.com", "invalid");
+        mvc.perform(MockMvcRequestBuilders
+                .post("/authenticate")
+                .content(new ObjectMapper().writeValueAsString(badCredentials))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isUnauthorized());
+
+        badCredentials = new AuthenticationDTO("invalid@domain.com", "password");
+        mvc.perform(MockMvcRequestBuilders
+                .post("/authenticate")
+                .content(new ObjectMapper().writeValueAsString(badCredentials))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isUnauthorized());
     }
 }

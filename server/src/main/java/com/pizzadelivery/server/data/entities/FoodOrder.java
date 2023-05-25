@@ -1,12 +1,12 @@
 package com.pizzadelivery.server.data.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.UniqueElements;
+import jakarta.validation.constraints.Null;
 
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.Objects;
 
 @Entity
@@ -28,10 +28,10 @@ public class FoodOrder {
     @JoinColumn(name = "menu_id", referencedColumnName = "id", nullable = false)
     private Menu menuByMenuId;
 
+    @Null(groups = NonValidatedOnPersistTime.class)
     @JsonIgnore
-    @UniqueElements
-    @OneToMany(mappedBy = "id.foodOrderByFoodOrderId", orphanRemoval = true)
-    private Collection<OrderDelivery> orderDeliveriesById;
+    @OneToOne(mappedBy = "id.foodOrderByFoodOrderId", orphanRemoval = true)
+    private OrderDelivery orderDeliveryByOrderDeliveryId;
 
     public int getId() {
         return id;

@@ -8,7 +8,6 @@ import java.util.Objects;
 
 @Entity
 public class Ingredient {
-    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -74,18 +73,19 @@ public class Ingredient {
     }
 
     // for testing
-    public Ingredient(String name) {
+    public Ingredient(String name, int price) {
         this.name = name;
-    }
-
-    public Ingredient(int id, String name) {
-        this.id = id;
-        this.name = name;
+        this.price = price;
     }
 
     public Ingredient(String name, int price, Allergy allergyByAllergyId) {
         this.name = name;
         this.price = price;
         this.allergyByAllergyId = allergyByAllergyId;
+    }
+
+    public Ingredient(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 }

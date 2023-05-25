@@ -1,9 +1,9 @@
 package com.pizzadelivery.server.services;
 
 
+import com.pizzadelivery.server.data.entities.Car;
 import com.pizzadelivery.server.data.entities.Ingredient;
 import com.pizzadelivery.server.data.entities.Inventory;
-import com.pizzadelivery.server.data.entities.InventoryPK;
 import com.pizzadelivery.server.data.repositories.CarRepository;
 import com.pizzadelivery.server.data.repositories.IngredientRepository;
 import com.pizzadelivery.server.data.repositories.InventoryRepository;
@@ -12,13 +12,16 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import static com.pizzadelivery.server.utils.Dispatcher.INVENTORY_CAPACITY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class InventoryService extends ServiceORM<Inventory> {
@@ -63,9 +66,15 @@ public class InventoryService extends ServiceORM<Inventory> {
 
     public Inventory modifyInventory(Inventory inventory, boolean increase) {
         //if it's null then either authorized admin is calling from client or dispatcher fills up, so the same car is used
-        if (inventory.getCarByCarId() == null)
-            inventory.setCarByCarId(carRepository.findById(1)
-                    .orElseThrow(() -> new ConstraintViolationException("No available car", new HashSet<>())));
+        if (inventory.getCarByCarId() == null) {
+            Optional<Car> car = carRepository.findById(1);
+            if (car.isEmpty()) {
+                System.out.println("No available car");
+                return null;
+            } else
+                inventory.setCarByCarId(car.get());
+        }
+
 
         if (ingredientRepository.existsById(inventory.getIngredientByIngredientId().getId())) {
             int lastQuantity = 0;
@@ -91,16 +100,18 @@ public class InventoryService extends ServiceORM<Inventory> {
         throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
     }
 
-    public Iterable<Inventory> deleteInventory(InventoryPK id) {
-        var inventory = inventoryRepository.findById(id)
-                .orElseThrow(() -> new ConstraintViolationException("Invalid ID constraint", new HashSet<>()));
-        if (!inventoryRepository
-                .findByIdIngredientByIngredientId(inventory.getIngredientByIngredientId(),
-                        Sort.by(Sort.Direction.DESC, "id.modifiedAt")).get(0).getModifiedAt()
-                .equals(inventory.getModifiedAt()))
-            throw new ConstraintViolationException("Only the latest record can be deleted per ingredient", new HashSet<>());
+    public Iterable<Inventory> deleteInventory(int ingredientId) {
+        var ingredient = ingredientRepository.findById(ingredientId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND));
+        try {
+            List<Inventory> records = inventoryRepository
+                    .findByIdIngredientByIngredientId(ingredient,
+                            Sort.by(Sort.Direction.DESC, "id.modifiedAt"));
+            inventoryRepository.deleteById(records.get(0).getId());
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResponseStatusException(NOT_FOUND);
+        }
 
-        inventoryRepository.deleteById(id);
         return readInventory(null);
     }
 

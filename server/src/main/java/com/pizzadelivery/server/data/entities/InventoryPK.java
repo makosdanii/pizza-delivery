@@ -2,6 +2,7 @@ package com.pizzadelivery.server.data.entities;
 
 import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
 import java.io.Serializable;
@@ -17,6 +18,7 @@ public class InventoryPK implements Serializable {
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
     private Car carByCarId;
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;

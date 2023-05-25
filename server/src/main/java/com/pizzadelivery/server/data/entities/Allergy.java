@@ -7,7 +7,6 @@ import java.util.Objects;
 
 @Entity
 public class Allergy {
-    //@Null(groups = NonValidatedOnPersistTime.class)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -44,5 +43,17 @@ public class Allergy {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public Allergy() {
+    }
+
+    public Allergy(String name) {
+        this.name = name;
+    }
+
+    public Allergy(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 }

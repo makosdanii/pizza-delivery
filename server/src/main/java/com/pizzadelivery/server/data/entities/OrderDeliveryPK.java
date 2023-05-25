@@ -13,7 +13,7 @@ public class OrderDeliveryPK implements Serializable {
     @Column(name = "delivered_at", nullable = false)
     private Timestamp deliveredAt;
     @NotNull
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "food_order_id", referencedColumnName = "id", nullable = false)
     private FoodOrder foodOrderByFoodOrderId;
 

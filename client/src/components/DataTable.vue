@@ -96,8 +96,7 @@
     </template>
     <v-card>
       <v-card-text>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-        magna aliqua.
+        <slot name="error"></slot>
       </v-card-text>
     </v-card>
   </v-dialog>

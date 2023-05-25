@@ -1,9 +1,7 @@
 package com.pizzadelivery.server.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pizzadelivery.server.data.entities.Role;
-import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.Assertions;
+import com.pizzadelivery.server.data.entities.Allergy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,7 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-class RoleControllerTest extends ControllerTest {
+class AllergyControllerTest extends ControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     private MockMvc mvc;
@@ -32,31 +30,23 @@ class RoleControllerTest extends ControllerTest {
 
     @Order(1)
     @Test
-    void registerRole() throws Exception {
-        var empty = new ObjectMapper().writeValueAsString(new Role());
-        final var valid = new ObjectMapper().writeValueAsString(new Role("customer"));
-        var properDriver = new ObjectMapper().writeValueAsString(new Role("driver"));
-        var properChef = new ObjectMapper().writeValueAsString(new Role("chef"));
-
-        //admin needs to authenticate
-        Assertions.assertThrows(ServletException.class, () ->
-                mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
-                        .content(valid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)));
+    void registerAllergy() throws Exception {
+        var empty = new ObjectMapper().writeValueAsString(new Allergy());
+        final var valid = new ObjectMapper().writeValueAsString(new Allergy("gluten"));
+        var properLactose = new ObjectMapper().writeValueAsString(new Allergy("lactose"));
+        var duplicate = new ObjectMapper().writeValueAsString(new Allergy("gluten"));
 
         authorize("admin@domain.com");
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
+                        .post("/allergy")
                         .content(empty)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
+                        .post("/allergy")
                         .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -64,54 +54,53 @@ class RoleControllerTest extends ControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
-                        .content(valid)
+                        .post("/allergy")
+                        .content(duplicate)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
-                        .content(properDriver)
+                        .post("/allergy")
+                        .content(properLactose)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
-                        .content(properChef)
+                        .post("/allergy")
+                        .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(status().isBadRequest());
     }
 
     @Order(2)
     @Test
-    void updateRole() throws Exception {
-        var cook = new ObjectMapper().writeValueAsString(new Role("cook"));
+    void updateAllergy() throws Exception {
+        var glucose = new ObjectMapper().writeValueAsString(new Allergy("glucose"));
 
         authorize("admin@domain.com");
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/role/99")
-                        .content(cook)
+                        .put("/allergy/99")
+                        .content(glucose)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/role/4")
-                        .content(cook)
+                        .put("/allergy/2")
+                        .content(glucose)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
 
-        var alreadyExist = new ObjectMapper().writeValueAsString(new Role("admin"));
+        var alreadyExist = new ObjectMapper().writeValueAsString(new Allergy("gluten"));
         mvc.perform(MockMvcRequestBuilders
-                        .put("/role/2")
+                        .put("/allergy/2")
                         .content(alreadyExist)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -120,16 +109,16 @@ class RoleControllerTest extends ControllerTest {
 
     @Order(3)
     @Test
-    void deleteRole() throws Exception {
+    void deleteAllergy() throws Exception {
         authorize("admin@domain.com");
 
         mvc.perform(MockMvcRequestBuilders
-                        .delete("/role/99")
+                        .delete("/allergy/99")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
         mvc.perform(MockMvcRequestBuilders
-                        .delete("/role/4")
+                        .delete("/allergy/2")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

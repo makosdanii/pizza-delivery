@@ -63,6 +63,16 @@ export default {
   methods: {
     async save() {
       if (!this.name.length) {
+        this.errors = {}
+        await this.schema.validate(this.editedItem, {abortEarly: false})
+            .catch((err) => {
+              err.inner.forEach((error) => {
+                this.errors = {...this.errors, [error.path]: error.message};
+              });
+            });
+
+        if (Object.keys(this.errors).length) return
+
         await this.login({...this.editedItem, rememberMe: false})
         await server.findUser()
             .then(promise => {
@@ -73,15 +83,6 @@ export default {
             )
         this.snackText = `Login ${(this.name.length ? "succeeded" : "failed")}`
         this.snack = true;
-        this.errors = {}
-        await this.schema.validate(this.editedItem, {abortEarly: false})
-            .catch((err) => {
-              err.inner.forEach((error) => {
-                this.errors = {...this.errors, [error.path]: error.message};
-              });
-            });
-
-        if (Object.keys(this.errors).length) return
 
       } else {
         if (await this.logout()) {

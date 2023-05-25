@@ -4,6 +4,7 @@ import com.pizzadelivery.server.config.utils.UserAuthorizationDetails;
 import com.pizzadelivery.server.data.entities.Car;
 import com.pizzadelivery.server.data.entities.CarIngredient;
 import com.pizzadelivery.server.data.entities.Inventory;
+import com.pizzadelivery.server.data.entities.User;
 import com.pizzadelivery.server.data.repositories.*;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
@@ -13,7 +14,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import static com.pizzadelivery.server.utils.Dispatcher.CAR_CAPACITY;
 
@@ -53,8 +57,8 @@ public class CarService extends ServiceORM<Car> {
         return carRepository.save(car);
     }
 
-    public Optional<Car> findCar(int id) {
-        return carRepository.findById(id);
+    public Car findCar(int id) {
+        return carRepository.findById(id).orElse(new Car());
     }
 
     public Iterable<Car> listAll(boolean isAdmin) {
@@ -69,7 +73,7 @@ public class CarService extends ServiceORM<Car> {
     // persist after in transactional
     public Car updateCar(int id, Car car) throws AlreadyExistsException {
         Car old = carRepository.findById(id).orElse(new Car());
-        var authenticated = SecurityContextHolder.getContext()
+        boolean authenticated = SecurityContextHolder.getContext()
                 .getAuthentication().isAuthenticated();
 
         if (authenticated) {
@@ -86,11 +90,20 @@ public class CarService extends ServiceORM<Car> {
             // case of driving it
             if (car.getUserByUserId() != null && !isAuthorizedForCar(car))
                 throw new ConstraintViolationException("Only admin or driver can assign people", new HashSet<>());
+
         }
 
         if (old.getId() != UNASSIGNED) {
             checkConstraint(car, !old.getLicense().equals(car.getLicense()));
             car.setId(id);
+
+            if (car.getUserByUserId() != null) {
+                User driver = userRepository.findById(car.getUserByUserId().getId()).orElse(new User());
+                Car assignedCar = driver.getCarByCarId();
+                if (assignedCar != null && assignedCar != car) {
+                    throw new ConstraintViolationException("Driver is already assigned to another car", new HashSet<>());
+                }
+            }
             return car;
         }
 

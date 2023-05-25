@@ -30,7 +30,6 @@ public class IngredientController extends Controller {
     @GetMapping("/{id}")
     public ResponseEntity<Ingredient> findIngredient(@PathVariable @Positive int id) {
         Ingredient ingredient = ingredientService.findIngredient(id);
-
         return new ResponseEntity<>(ingredient, ingredient.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
@@ -39,7 +38,7 @@ public class IngredientController extends Controller {
         return ingredientService.listAll();
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Ingredient> registerIngredient(@RequestBody @Valid Ingredient ingredient) throws AlreadyExistsException {
         return new ResponseEntity<>(ingredientService.createIngredient(ingredient), HttpStatus.CREATED);
     }

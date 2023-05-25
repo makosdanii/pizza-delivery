@@ -1,7 +1,5 @@
 package com.pizzadelivery.server.data.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -10,11 +8,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id",
-        scope = Edge.class
-)
 @Entity
 public class Edge implements Comparable<Edge>, Comparator<Edge> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +22,7 @@ public class Edge implements Comparable<Edge>, Comparator<Edge> {
     private int edgeWeight;
 
     @ManyToOne
-    @JoinColumn(name = "edge_name", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "street_name_id", referencedColumnName = "id", nullable = false)
     private StreetName streetNameByEdgeName;
     @OneToMany(mappedBy = "id.edgeByEdgeId", fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)

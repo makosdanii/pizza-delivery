@@ -30,7 +30,6 @@ public class AllergyController extends Controller {
     @GetMapping("/{id}")
     public ResponseEntity<Allergy> findAllergy(@PathVariable @Positive int id) {
         Allergy allergy = allergyService.findAllergy(id);
-
         return new ResponseEntity<>(allergy, allergy.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
@@ -39,7 +38,7 @@ public class AllergyController extends Controller {
         return allergyService.listAll();
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Allergy> registerAllergy(@RequestBody @Valid Allergy allergy) throws AlreadyExistsException {
         return new ResponseEntity<>(allergyService.createAllergy(allergy), HttpStatus.CREATED);
     }

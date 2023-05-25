@@ -96,7 +96,7 @@ export default {
                 this.snack = true
               }
             }).catch(err => {
-          if (err.response.status === 400 || err.response.status === 401) {
+          if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
             this.$refs.table.snackText = "Operation denied"
             this.$refs.table.color = "red"
             this.$refs.table.snack = true
@@ -126,7 +126,7 @@ export default {
                     this.snack = true
                   }
                 }).catch(err => {
-              if (err.response.status === 400 || err.response.status === 401) {
+              if (err.response.status === 400 || err.response.status === 401 || err.response.status === 404) {
                 this.$refs.table.snackText = "Operation denied"
                 this.$refs.table.color = "red"
                 this.$refs.table.snack = true
@@ -158,7 +158,7 @@ export default {
   },
   async mounted() {
     this.selected = this.menuIngredients.map(ingredient => ingredient.ingredientByIngredientId.name)
-    if (!this.ingredients.length)
+    if (!this.ingredients.length && role !== 'customer')
       await this.listIngredients()
   },
 

@@ -15,7 +15,6 @@ public class OrderDelivery {
     @Valid
     @EmbeddedId
     OrderDeliveryPK id;
-
     @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)

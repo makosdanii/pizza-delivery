@@ -9,11 +9,9 @@ import java.util.Objects;
 
 @Embeddable
 public class CarIngredientPK implements Serializable {
-    //    @NotNull
     @ManyToOne
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;
-    //    @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
     private Car carByCarId;
