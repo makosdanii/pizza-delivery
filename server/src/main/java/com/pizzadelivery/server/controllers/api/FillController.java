@@ -30,7 +30,12 @@ public class FillController extends Controller {
     private final MenuService menuService;
 
     @Autowired
-    public FillController(UserService userService, RoleService roleService, CarService carService, AllergyService allergyService, IngredientService ingredientService, MenuService menuService) {
+    public FillController(UserService userService,
+                          RoleService roleService,
+                          CarService carService,
+                          AllergyService allergyService,
+                          IngredientService ingredientService,
+                          MenuService menuService) {
         this.userService = userService;
         this.roleService = roleService;
         this.carService = carService;
@@ -40,22 +45,18 @@ public class FillController extends Controller {
     }
 
     @GetMapping("/roles")
-    public String roles() {
+    public String roles() throws AlreadyExistsException {
         var data = List.of(new Role("customer"),
                 new Role("driver"),
                 new Role("chef"));
-        data.forEach(entity -> {
-            try {
-                roleService.createRole(entity);
-            } catch (AlreadyExistsException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (var entity : data) {
+            roleService.createRole(entity);
+        }
         return "OK";
     }
 
     @GetMapping("/users")
-    public String users() {
+    public String users() throws AlreadyExistsException {
         var data = List.of(new User("john.smith@example.com", "John Smith", "verysecret", new Role(1, "admin")),
                 new User("emily.johnson@example.com", "Emily Johnson", "verysecret", new Role(2, "customer")),
                 new User("david.williams@example.com", "David Williams", "verysecret", new Role(3, "driver")),
@@ -66,44 +67,32 @@ public class FillController extends Controller {
                 new User("daniel.martinez@example.com", "Daniel Martinez", "verysecret", new Role(4, "chef")),
                 new User("amanda.thomas@example.com", "Amanda Thomas", "verysecret", new StreetName(1, "Arany"), 1, new Role(2, "customer")),
                 new User("jessica.taylor@example.com", "Jessica Taylor", "verysecret", new StreetName(3, "Petofi"), 1, new Role(2, "customer")));
-        data.forEach(entity -> {
-            try {
-                userService.createUser(entity);
-            } catch (AlreadyExistsException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (var entity : data) {
+            userService.createUser(entity);
+        }
         return "OK";
     }
 
     @GetMapping("/cars")
-    public String cars() {
+    public String cars() throws AlreadyExistsException {
         var data = List.of(new Car("hsd-675"), new Car("esb-747"), new Car("sle-723"), new Car("nrb-236"));
-        data.forEach(entity -> {
-            try {
-                carService.createCar(entity);
-            } catch (AlreadyExistsException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (var entity : data) {
+            carService.createCar(entity);
+        }
         return "OK";
     }
 
     @GetMapping("/allergies")
-    public String allergies() {
+    public String allergies() throws AlreadyExistsException {
         var data = List.of(new Allergy("Milk"), new Allergy("Peanuts"), new Allergy("Soy"), new Allergy("Wheat"), new Allergy("Fish"));
-        data.forEach(entity -> {
-            try {
-                allergyService.createAllergy(entity);
-            } catch (AlreadyExistsException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (var entity : data) {
+            allergyService.createAllergy(entity);
+        }
         return "OK";
     }
 
     @GetMapping("/ingredients")
-    public String ingredients() {
+    public String ingredients() throws AlreadyExistsException {
         var data = List.of(new Ingredient("Pizza Dough", 10, new Allergy(4, "Wheat")),
                 new Ingredient("Tomato Sauce", 20),
                 new Ingredient("Mozzarella Cheese", 40, new Allergy(1, "Milk")),
@@ -117,18 +106,14 @@ public class FillController extends Controller {
                 new Ingredient("Pineapple", 50),
                 new Ingredient("Spinach", 30),
                 new Ingredient("Anchovies", 70, new Allergy(5, "Fish")));
-        data.forEach(entity -> {
-            try {
-                ingredientService.createIngredient(entity);
-            } catch (AlreadyExistsException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (var entity : data) {
+            ingredientService.createIngredient(entity);
+        }
         return "OK";
     }
 
     @GetMapping("/menus")
-    public String menus() {
+    public String menus() throws AlreadyExistsException {
         var data = List.of(new Menu("Margherita Pizza", 200),
                 new Menu("Pepperoni Pizza", 300),
                 new Menu("Hawaiian Pizza", 250),
@@ -136,13 +121,9 @@ public class FillController extends Controller {
                 new Menu("Veggie Supreme Pizza", 200),
                 new Menu("Four Cheese Pizza", 300),
                 new Menu("Mediterranean Pizza", 300));
-        data.forEach(entity -> {
-            try {
-                menuService.createMenu(entity);
-            } catch (AlreadyExistsException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (var entity : data) {
+            menuService.createMenu(entity);
+        }
         return "OK";
     }
 
