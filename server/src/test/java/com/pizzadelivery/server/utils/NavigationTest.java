@@ -28,7 +28,7 @@ class NavigationTest {
 
 
     @Test
-    void navigate() throws Exception {
+    void navigate() {
         Car mockCar = new Car();
         Edge start = edgeService.findEdge(1);
         Edge[] oneStep = navigation.dijkstraShortestPath(start, start);
@@ -62,10 +62,7 @@ class NavigationTest {
         List<Integer> mockIds = IntStream.range(1, until + 1).boxed().toList();
         var mockGraph = new ArrayList<>(edgeService.loadGraph().stream().filter(arr -> mockIds
                 .contains(arr.get(0).getId())).toList());
-        for (int i = 0; i < mockGraph.size(); i++) {
-            mockGraph.set(i,
-                    new ArrayList<>(mockGraph.get(i).stream().filter(edge -> mockIds.contains(edge.getId())).toList()));
-        }
+        mockGraph.replaceAll(edges -> new ArrayList<>(edges.stream().filter(edge -> mockIds.contains(edge.getId())).toList()));
         navigation.setGraph(mockGraph);
     }
 }

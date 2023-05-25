@@ -57,13 +57,8 @@ public class Edge implements Comparable<Edge>, Comparator<Edge> {
     //for instances in PrQue
     @Override
     public int compare(Edge node1, Edge node2) {
-        if (node1.edgeWeight < node2.edgeWeight)
-            return -1;
+        return Integer.compare(node1.edgeWeight, node2.edgeWeight);
 
-        if (node1.edgeWeight > node2.edgeWeight)
-            return 1;
-
-        return 0;
     }
 
     @Override
@@ -116,11 +111,6 @@ public class Edge implements Comparable<Edge>, Comparator<Edge> {
 
     @Override
     public int compareTo(Edge o) {
-        if (getId() > o.getId()) {
-            return 1;
-        } else if (getId() < o.getId()) {
-            return -1;
-        } else
-            return 0;
+        return Integer.compare(getId(), o.getId());
     }
 }

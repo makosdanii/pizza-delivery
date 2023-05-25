@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StreetRepository extends CrudRepository<StreetName, Integer> {
-    public StreetName findByThat(String that);
+
 }

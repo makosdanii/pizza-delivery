@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
+/**
+ * Data transit object for {@code AuthenticationController}
+ */
 public class AuthenticationDTO implements Serializable {
     @Email
     @NotBlank

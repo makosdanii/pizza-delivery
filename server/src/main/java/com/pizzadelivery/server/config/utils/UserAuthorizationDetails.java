@@ -5,6 +5,10 @@ import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
 
+/**
+ * For storing user details in Security Context. Its creation was necessary for checking authenticated user's
+ * {@code id}, which it stores.
+ */
 public class UserAuthorizationDetails extends User {
     private int id;
 
@@ -13,11 +17,6 @@ public class UserAuthorizationDetails extends User {
     }
 
     public void setId(int id) {
-        this.id = id;
-    }
-
-    public UserAuthorizationDetails(int id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        super(username, password, authorities);
         this.id = id;
     }
 

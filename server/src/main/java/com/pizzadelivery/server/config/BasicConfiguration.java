@@ -26,6 +26,9 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 
+/**
+ * Basic configuration class for handling requests
+ */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(
@@ -65,6 +68,9 @@ public class BasicConfiguration {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * @return authentication provider, configured for retrieving user details from DB, through {@code userService}
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();

@@ -10,9 +10,9 @@ import java.util.List;
 
 @Repository
 public interface FoodOrderRepository extends CrudRepository<FoodOrder, Integer> {
-    public List<FoodOrder> findAll();
+    List<FoodOrder> findAll();
 
-    public List<FoodOrder> findAllByUserByUserId(User userByUserId);
+    List<FoodOrder> findAllByUserByUserId(User userByUserId);
 
-    public List<FoodOrder> findAllByOrderedAtBefore(Date before);
+    List<FoodOrder> findAllByOrderedAtBefore(Date before);
 }

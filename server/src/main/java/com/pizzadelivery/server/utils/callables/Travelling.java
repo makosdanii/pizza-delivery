@@ -16,11 +16,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.function.Function;
 
 import static com.pizzadelivery.server.utils.Dispatcher.INVENTORY_LOCATION;
 import static java.lang.Thread.sleep;
 
+/**
+ * Class implements {@code Callable}. In the method, which is overridden, the thread is slept for time periods
+ * which basically resembles the travelling process. It also logs the journey to either a customer or the inventory.
+ */
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Travelling implements Callable<String> {
@@ -31,7 +34,6 @@ public class Travelling implements Callable<String> {
     private List<FoodOrder> foodOrders;
     private Map<Car, Edge> map;
     private Car car;
-    private Function<Car, Integer> depot;
 
     public Travelling(ChatController chatController, CarService carService, InventoryService inventoryService) {
         this.chatController = chatController;
@@ -55,10 +57,6 @@ public class Travelling implements Callable<String> {
         this.car = car;
     }
 
-    public void setDepot(Function<Car, Integer> depot) {
-        this.depot = depot;
-    }
-
     @Override
     public String call() {
         try {
@@ -67,9 +65,9 @@ public class Travelling implements Callable<String> {
             var delivering = !foodOrders.isEmpty();
             var id = delivering ? foodOrders.get(0).getUserByUserId().getId() : 0;
 
-            System.out.printf("Car %d - setting off for a %d long route%n",
+            System.out.printf("Car %d - setting off for a %d long route to %s%n",
                     car.getId(), distance,
-                    route[route.length - 1].getId() == INVENTORY_LOCATION ? "refilling" : "delivering");
+                    route[route.length - 1].getId() == INVENTORY_LOCATION ? "refill" : "deliver");
 
             //travel speed: meter/millisecond
             Arrays.stream(route).forEach(street -> {
@@ -94,12 +92,7 @@ public class Travelling implements Callable<String> {
                     System.out.printf("Car %d - delivered a %s%n", car.getId(), order.getMenuByMenuId().getName());
                 });
             } else {
-                carService.fillCarIngredients(car).forEach(((carIngredient, inventory) -> {
-                    // it's the same function tbh
-                    carService.persist(carIngredient);
-                    inventoryService.persist(inventory);
-                }));
-                System.out.printf("Car %d - refilled, ready%n", car.getId());
+                System.out.printf("Car %d - back at inventory, ready%n", car.getId());
             }
 
             map.put(car, route[route.length - 1]);

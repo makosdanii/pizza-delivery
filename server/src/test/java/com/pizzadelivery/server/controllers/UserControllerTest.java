@@ -225,12 +225,12 @@ class UserControllerTest extends ControllerTest {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
 
         // user can only order for himself
-//        mvc.perform(MockMvcRequestBuilders
-//                        .post("/user/2/order")
-//                        .content(valid)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .accept(MediaType.APPLICATION_JSON))
-//                .andExpect(status().is4xxClientError());
+        mvc.perform(MockMvcRequestBuilders
+                        .post("/user/2/order")
+                        .content(valid)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError());
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/user/9/order")
@@ -257,18 +257,12 @@ class UserControllerTest extends ControllerTest {
 
     // user entity would not work for serialization because password field
     static class User {
-        private int id;
-        private String email;
-        private String name;
-        private String password;
+        private final String email;
+        private final String name;
+        private final String password;
         private StreetName streetNameByStreetNameId;
         private int houseNo;
-        private Role roleByRoleId;
-
-        public User(int id, String email) {
-            this.id = id;
-            this.email = email;
-        }
+        private final Role roleByRoleId;
 
         public User(String email, String name, String password, Role roleByRoleId) {
             this.email = email;
@@ -284,13 +278,6 @@ class UserControllerTest extends ControllerTest {
             this.streetNameByStreetNameId = streetNameByStreetNameId;
             this.houseNo = houseNo;
             this.roleByRoleId = roleByRoleId;
-        }
-
-        public User(int id, String email, StreetName streetNameByStreetNameId, int houseNo) {
-            this.id = id;
-            this.email = email;
-            this.streetNameByStreetNameId = streetNameByStreetNameId;
-            this.houseNo = houseNo;
         }
 
         public String getEmail() {

@@ -16,7 +16,7 @@ import java.sql.Date;
 @RestController
 @RequestMapping("/order")
 public class OrderController {
-    OrderService orderService;
+    private final OrderService orderService;
 
     @Autowired
     public OrderController(OrderService orderService) {

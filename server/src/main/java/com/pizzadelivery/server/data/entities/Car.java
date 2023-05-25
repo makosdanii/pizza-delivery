@@ -16,10 +16,10 @@ public class Car {
     private int id;
     @Basic
     @NotBlank
-    @Column(name = "license", nullable = true, length = 16, unique = true)
+    @Column(name = "license", length = 16, unique = true)
     private String license;
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User userByUserId;
     @JsonIgnore
     @UniqueElements
@@ -57,15 +57,6 @@ public class Car {
     @Override
     public int hashCode() {
         return Objects.hash(id);
-    }
-
-    @Override
-    public Car clone() {
-        var car = new Car();
-        car.setId(getId());
-        car.setLicense(getLicense());
-        car.setUserByUserId(getUserByUserId());
-        return car;
     }
 
     public User getUserByUserId() {
@@ -106,7 +97,6 @@ public class Car {
     }
 
     public Car(String license, User userByUserId) {
-        this.id = id;
         this.license = license;
         this.userByUserId = userByUserId;
     }

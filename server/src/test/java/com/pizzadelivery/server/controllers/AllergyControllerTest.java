@@ -23,7 +23,7 @@ class AllergyControllerTest extends ControllerTest {
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .build();
     }

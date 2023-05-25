@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.Serializable;
 
+/**
+ * Sends unauthorized response for any request causing unhandled exception
+ */
 @Component
 public class JwtEntryPoint implements AuthenticationEntryPoint, Serializable {
     @Override

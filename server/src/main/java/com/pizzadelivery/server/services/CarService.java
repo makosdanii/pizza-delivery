@@ -14,10 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.pizzadelivery.server.utils.Dispatcher.CAR_CAPACITY;
 
@@ -70,7 +67,7 @@ public class CarService extends ServiceORM<Car> {
         }
     }
 
-    // persist after in transactional
+    // persist return value in transactional
     public Car updateCar(int id, Car car) throws AlreadyExistsException {
         Car old = carRepository.findById(id).orElse(new Car());
         boolean authenticated = SecurityContextHolder.getContext()
@@ -84,11 +81,11 @@ public class CarService extends ServiceORM<Car> {
                 car.setLicense(old.getLicense());
 
             // case of leaving the car
-            if (old.getUserByUserId() != null && !isAuthorizedForCar(old))
+            if (old.getUserByUserId() != null && NotAuthorizedForCar(old))
                 throw new ConstraintViolationException("Only admin or driver can assign people", new HashSet<>());
 
             // case of driving it
-            if (car.getUserByUserId() != null && !isAuthorizedForCar(car))
+            if (car.getUserByUserId() != null && NotAuthorizedForCar(car))
                 throw new ConstraintViolationException("Only admin or driver can assign people", new HashSet<>());
 
         }
@@ -123,7 +120,11 @@ public class CarService extends ServiceORM<Car> {
         return carIngredientRepository.findAllByIdCarByCarId(car);
     }
 
-    // persist after in transactional
+
+    /**
+     * @param car of which ingredients are filled
+     * @return map of deficient {@code carIngredients} and corresponding inventory decreases
+     */
     public Map<CarIngredient, Inventory> fillCarIngredients(Car car) {
         Map<CarIngredient, Inventory> ingredients = new HashMap<>();
 
@@ -148,15 +149,17 @@ public class CarService extends ServiceORM<Car> {
         return ingredients;
     }
 
-    // persist after in transactional
-    public Map<CarIngredient, Inventory> depotCarIngredients(Car car) {
-        Map<CarIngredient, Inventory> ingredients = new HashMap<>();
+    /**
+     * @param car of which leftovers are depoted
+     * @return list of records of inventories increased with leftovers to be persisted
+     */
+    public List<Inventory> depotCarIngredients(Car car) {
+        List<Inventory> ingredients = new ArrayList<>();
         listCarIngredients(car).forEach(carIngredient -> {
             if (carIngredient.getCurrentQuantity() > 0) {
                 Inventory inventoryChange = inventoryService.modifyInventory(new Inventory(carIngredient.getCarByCarId(), 0,
                         carIngredient.getCurrentQuantity(), carIngredient.getIngredientByIngredientId()), true);
-                carIngredient.setCurrentQuantity(0);
-                ingredients.put(carIngredient, inventoryChange);
+                ingredients.add(inventoryChange);
             }
         });
 
@@ -183,11 +186,15 @@ public class CarService extends ServiceORM<Car> {
         }
     }
 
-    private boolean isAuthorizedForCar(Car car) {
+    /**
+     * @param car to be checked
+     * @return whether user is neither admin nor the one previously assigned to the car
+     */
+    private boolean NotAuthorizedForCar(Car car) {
         UserAuthorizationDetails authenticated = (UserAuthorizationDetails) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
-        return authenticated.getAuthorities().contains(new SimpleGrantedAuthority("admin"))
-                || car.getUserByUserId().getId() == authenticated.getId();
+        return !authenticated.getAuthorities().contains(new SimpleGrantedAuthority("admin"))
+                && car.getUserByUserId().getId() != authenticated.getId();
     }
 
     @Override

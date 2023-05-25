@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
-@Table(name = "food_order", schema = "pizza_delivery", catalog = "")
+@Table(name = "food_order", schema = "pizza_delivery")
 public class FoodOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

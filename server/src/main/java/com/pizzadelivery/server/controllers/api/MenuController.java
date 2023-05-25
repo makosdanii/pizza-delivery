@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.Menu;
 import com.pizzadelivery.server.data.entities.MenuIngredient;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
@@ -20,7 +21,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 @CrossOrigin
 @RequestMapping("/menu")
 public class MenuController extends Controller {
-    private MenuService menuService;
+    private final MenuService menuService;
 
     @Autowired
     public MenuController(MenuService menuService) {

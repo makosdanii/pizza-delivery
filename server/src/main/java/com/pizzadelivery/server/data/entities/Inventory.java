@@ -17,7 +17,7 @@ public class Inventory {
     private InventoryPK id;
     @PositiveOrZero
     @Basic
-    @Column(name = "expense", nullable = true)
+    @Column(name = "expense")
     private Integer expense;
     @Positive
     @Basic

@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface AllergyRepository extends CrudRepository<Allergy, Integer> {
-    public List<Allergy> findByName(String name);
+    List<Allergy> findByName(String name);
 }

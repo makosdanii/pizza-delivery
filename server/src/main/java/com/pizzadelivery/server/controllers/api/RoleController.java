@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.Role;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.RoleService;
@@ -20,7 +21,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 @RequestMapping("/role")
 @PreAuthorize("hasAuthority('admin')")
 public class RoleController extends Controller {
-    private RoleService roleService;
+    private final RoleService roleService;
 
     @Autowired
     public RoleController(RoleService roleService) {

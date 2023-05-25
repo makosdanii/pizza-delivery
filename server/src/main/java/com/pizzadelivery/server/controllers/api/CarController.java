@@ -1,9 +1,9 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.Car;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.CarService;
-import com.pizzadelivery.server.services.RoleService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +22,11 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 @CrossOrigin
 @RequestMapping("/car")
 public class CarController extends Controller {
-    private CarService carService;
-    private RoleService roleService;
+    private final CarService carService;
 
     @Autowired
-    public CarController(CarService carService, RoleService roleService) {
+    public CarController(CarService carService) {
         this.carService = carService;
-        this.roleService = roleService;
     }
 
     @PreAuthorize("hasAuthority('admin')")

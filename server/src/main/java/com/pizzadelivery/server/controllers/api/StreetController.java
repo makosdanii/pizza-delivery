@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.StreetName;
 import com.pizzadelivery.server.data.repositories.StreetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 @RequestMapping("/street")
 public class StreetController extends Controller {
-    private StreetRepository streetRepository;
+    private final StreetRepository streetRepository;
 
     @Autowired
     public StreetController(StreetRepository streetRepository) {

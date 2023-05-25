@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.*;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.*;

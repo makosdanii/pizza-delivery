@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface MenuRepository extends CrudRepository<Menu, Integer> {
-    public List<Menu> findByName(String name);
+    List<Menu> findByName(String name);
 }

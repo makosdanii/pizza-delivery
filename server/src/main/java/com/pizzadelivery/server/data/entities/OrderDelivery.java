@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Null;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "order_delivery", schema = "pizza_delivery", catalog = "")
+@Table(name = "order_delivery", schema = "pizza_delivery")
 public class OrderDelivery {
     @JsonIgnore
     @Valid

@@ -56,6 +56,13 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * method used by authentication manager to retrieve users stored in DB and also called when setting context manually
+     *
+     * @param email identifier
+     * @return object containing the details
+     * @throws UsernameNotFoundException when identified entity not found
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         var user = userRepository.findByEmail(email);
@@ -117,7 +124,6 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
         return true;
     }
 
-    // using food order type because that stores user and its address
     public Integer placeOrder(int id, List<FoodOrder> foodOrders) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ConstraintViolationException("Invalid user id", new HashSet<>()));
@@ -159,7 +165,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
 
         //if there's no authenticated user then only customer user can be created
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            Role customer = null;
+            Role customer;
             try {
                 customer = roleRepository.findByName("customer").get(0);
             } catch (IndexOutOfBoundsException e) {

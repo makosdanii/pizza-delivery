@@ -7,7 +7,6 @@ import com.pizzadelivery.server.data.entities.Inventory;
 import com.pizzadelivery.server.data.repositories.CarRepository;
 import com.pizzadelivery.server.data.repositories.IngredientRepository;
 import com.pizzadelivery.server.data.repositories.InventoryRepository;
-import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -50,7 +49,9 @@ public class InventoryService extends ServiceORM<Inventory> {
         return inventory.isEmpty() ? 0 : inventory.get(0).getCurrent();
     }
 
-    // persist after in transactional
+    /**
+     * @return list of deficient inventory items to be persisted
+     */
     public List<Inventory> fillInventory() {
         List<Inventory> inventories = new ArrayList<>();
         ingredientRepository.findAll().forEach(ingredient -> {
@@ -64,6 +65,11 @@ public class InventoryService extends ServiceORM<Inventory> {
         return inventories;
     }
 
+    /**
+     * @param inventory item with quantity to be added/deducted
+     * @param increase  whether add or deduct
+     * @return calculated new inventory quantity for the corresponding ingredient
+     */
     public Inventory modifyInventory(Inventory inventory, boolean increase) {
         //if it's null then either authorized admin is calling from client or dispatcher fills up, so the same car is used
         if (inventory.getCarByCarId() == null) {
@@ -116,7 +122,7 @@ public class InventoryService extends ServiceORM<Inventory> {
     }
 
     @Override
-    public void checkConstraint(Inventory inventory, boolean notExistYet) throws AlreadyExistsException {
+    public void checkConstraint(Inventory inventory, boolean notExistYet) {
 
     }
 }

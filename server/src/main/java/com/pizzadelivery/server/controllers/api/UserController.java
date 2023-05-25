@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.User;
 import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;

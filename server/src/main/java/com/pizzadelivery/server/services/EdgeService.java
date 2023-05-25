@@ -22,12 +22,6 @@ public class EdgeService {
         return edgeRepository.findById(id).orElseThrow();
     }
 
-    public Iterable<Edge> loadEdges() {
-        Iterable<Edge> all = edgeRepository.findAll();
-        loadGraph();
-        return all;
-    }
-
     public List<ArrayList<Edge>> loadGraph() {
         Iterable<Edge> all = edgeRepository.findAll();
         ArrayList<ArrayList<Edge>> graph = new ArrayList<>();

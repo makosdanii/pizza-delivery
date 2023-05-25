@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 
 @Entity
-@Table(name = "menu_ingredient", schema = "pizza_delivery", catalog = "")
+@Table(name = "menu_ingredient", schema = "pizza_delivery")
 public class MenuIngredient {
     @JsonIgnore
     @EmbeddedId

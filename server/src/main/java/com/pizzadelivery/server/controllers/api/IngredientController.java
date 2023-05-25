@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.Ingredient;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.IngredientService;
@@ -20,7 +21,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 @RequestMapping("/ingredient")
 @PreAuthorize("hasAnyAuthority('admin', 'chef')")
 public class IngredientController extends Controller {
-    private IngredientService ingredientService;
+    private final IngredientService ingredientService;
 
     @Autowired
     public IngredientController(IngredientService ingredientService) {

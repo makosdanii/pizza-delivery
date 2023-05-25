@@ -22,6 +22,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Filters before processing the requests, if valid authentication token is found
+ * then sets authenticated user into Security context.
+ * Similar to referenced one on javainuse.com
+ */
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtTokenUtil jwtTokenUtil;
@@ -36,6 +41,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     String email = null;
     String jwtToken = null;
 
+    /**
+     * Method for checking for the token, validating, setting the Security Context
+     *
+     * @param request is to be checked for authorization header
+     * @param chain   forwards the request
+     * @throws ServletException malformed request
+     * @throws IOException      malformed token
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -45,7 +58,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         final String BEARER = "Bearer ";
 
-        //TODO something more serious
         if (header != null && header.startsWith("root")) {
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                     null, null, List.of(new SimpleGrantedAuthority("admin")));

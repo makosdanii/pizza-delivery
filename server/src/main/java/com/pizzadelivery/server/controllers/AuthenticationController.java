@@ -23,11 +23,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Unprotected endpoint for authentication requests.
+ * Similar to referenced one on javainuse.com
+ */
 @RestController
 @CrossOrigin
-//        (origins = "http://localhost:5173", allowCredentials = "true",
-//        methods = {RequestMethod.POST, RequestMethod.OPTIONS},
-//        exposedHeaders = {"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"})
 public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUtil jwtTokenUtil;
@@ -40,9 +41,14 @@ public class AuthenticationController {
         this.userService = userService;
     }
 
+    /**
+     * credentials will be compared with the ones retrieved from DB in configuration, if found
+     *
+     * @param request DTO which stores user credentials
+     * @return token and id
+     */
     @PostMapping(value = "/authenticate", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> createAuthenticationToken(@RequestBody @Valid AuthenticationDTO request)
-            throws Exception {
+    public ResponseEntity<Map<String, String>> createAuthenticationToken(@RequestBody @Valid AuthenticationDTO request) {
         try {
             authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword().trim()));
@@ -73,6 +79,12 @@ public class AuthenticationController {
         }
     }
 
+    /**
+     * for future developments, hiding token totally from client-side script, for increased security
+     *
+     * @param request contains token in header
+     * @return header for unsetting the token
+     */
     @GetMapping(value = "/unset")
     public ResponseEntity<?> unsetTokenCookie(HttpServletRequest request) {
         final String token = request.getHeader(HttpHeaders.AUTHORIZATION);

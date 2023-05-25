@@ -1,5 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
+import com.pizzadelivery.server.controllers.Controller;
 import com.pizzadelivery.server.data.entities.Allergy;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import com.pizzadelivery.server.services.AllergyService;
@@ -20,7 +21,7 @@ import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 @RequestMapping("/allergy")
 @PreAuthorize("hasAnyAuthority('admin', 'chef')")
 public class AllergyController extends Controller {
-    private AllergyService allergyService;
+    private final AllergyService allergyService;
 
     @Autowired
     public AllergyController(AllergyService allergyService) {

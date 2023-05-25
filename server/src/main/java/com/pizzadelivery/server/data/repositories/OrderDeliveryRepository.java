@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface OrderDeliveryRepository extends CrudRepository<OrderDelivery, OrderDeliveryPK> {
-    public List<OrderDelivery> findAll();
+    List<OrderDelivery> findAll();
 
-    public List<OrderDelivery> findAllByIdDeliveredAtBefore(Date before);
+    List<OrderDelivery> findAllByIdDeliveredAtBefore(Date before);
 }

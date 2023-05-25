@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface RoleRepository extends CrudRepository<Role, Integer> {
-    public List<Role> findByName(String name);
+    List<Role> findByName(String name);
 }

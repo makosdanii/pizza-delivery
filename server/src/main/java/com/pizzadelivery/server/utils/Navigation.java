@@ -6,6 +6,9 @@ import com.pizzadelivery.server.services.EdgeService;
 
 import java.util.*;
 
+/**
+ * class responsible for navigation tasks amongst edges
+ */
 public class Navigation {
     List<ArrayList<Edge>> graph;
     Edge[] edges;
@@ -36,14 +39,14 @@ public class Navigation {
         return routes.get(fromItsPosition);
     }
 
-    public int getHistory() {
-        return routes.size();
-    }
-
-    public void clearHistory() {
-        this.routes.clear();
-    }
-
+    /**
+     * calls Dijkstra's algorithm, calculates the route, then stores it in {@code routes} map under the car
+     *
+     * @param car     the key which will identify result
+     * @param current car's current location
+     * @param target  edge to which the route leads
+     * @return accumulated distance of the route's edges
+     */
     public Integer navigate(Car car, Edge current, Edge target) {
         var result = dijkstraShortestPath(current, target);
         routes.put(car, result);
@@ -51,7 +54,15 @@ public class Navigation {
         return Arrays.stream(result).reduce(0, (acc, curr) -> acc + curr.getEdgeWeight(), Integer::sum);
     }
 
-    // public for testing only
+
+    /**
+     * implementation of Dijkstra's shortest path algorithm,
+     * the resulted minimum spanning tree is used to construct the route
+     *
+     * @param current edge the route begins with
+     * @param target  edge the route leads to
+     * @return array of edges to be iterated
+     */
     public Edge[] dijkstraShortestPath(Edge current, Edge target) {
         if (current.equals(target)) {
             return new Edge[]{current};
@@ -103,6 +114,14 @@ public class Navigation {
         return path.toArray(Edge[]::new);
     }
 
+    /**
+     * recursive algorithm starts from the target node and walks backwards amongst the parents in parentNodes
+     *
+     * @param parentNodes Dijkstra's node list
+     * @param path        list into the route is put
+     * @param from        start
+     * @param to          target
+     */
     private void assemble(int[] parentNodes, ArrayList<Edge> path, int from, int to) {
         Edge node = edges[parentNodes[to]];
         if (node.getId() == from) {

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface CarIngredientRepository extends CrudRepository<CarIngredient, CarIngredientPK> {
-    public List<CarIngredient> findAllByIdCarByCarId(Car car);
+    List<CarIngredient> findAllByIdCarByCarId(Car car);
 
-    public void deleteAllByIdCarByCarId(Car car);
+    void deleteAllByIdCarByCarId(Car car);
 }

@@ -3,7 +3,7 @@ package com.pizzadelivery.server.data.entities;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "car_ingredient", schema = "pizza_delivery", catalog = "")
+@Table(name = "car_ingredient", schema = "pizza_delivery")
 public class CarIngredient {
     @EmbeddedId
     private CarIngredientPK id;

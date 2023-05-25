@@ -9,11 +9,9 @@ import java.util.List;
 
 @Repository
 public interface CarRepository extends CrudRepository<Car, Integer> {
-    public List<Car> findByLicense(String license);
+    List<Car> findByLicense(String license);
 
-    public List<Car> findByUserByUserId(User user);
+    List<Car> findAll();
 
-    public List<Car> findAll();
-
-    public List<Car> findAllByUserByUserIdOrUserByUserIdIsNull(User userByUserId);
+    List<Car> findAllByUserByUserIdOrUserByUserIdIsNull(User userByUserId);
 }
