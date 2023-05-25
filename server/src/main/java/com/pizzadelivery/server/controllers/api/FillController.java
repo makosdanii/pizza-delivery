@@ -13,11 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Accepts GET request, with authorization Header. Its only purpose is to fill up DB with test data.
+ * So it should only be called after DB initialization.
+ */
 @RestController
 @CrossOrigin
 @RequestMapping("/fill-data")
 @PreAuthorize("hasAuthority('admin')")
-public class FillController {
+public class FillController extends Controller {
     private final UserService userService;
     private final RoleService roleService;
     private final CarService carService;
@@ -145,25 +149,25 @@ public class FillController {
     @GetMapping("/menu-ingredients")
     public String menuIngredients() {
         var data = List.of(
-                new Pair<Integer, MenuIngredient>(1, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(1, new MenuIngredient(new Ingredient(2, "sauce"), 3)),
-                new Pair<Integer, MenuIngredient>(1, new MenuIngredient(new Ingredient(3, "cheese"), 2)),
-                new Pair<Integer, MenuIngredient>(1, new MenuIngredient(new Ingredient(9, "basil"), 1)),
-                new Pair<Integer, MenuIngredient>(2, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(2, new MenuIngredient(new Ingredient(4, "pepperoni"), 3)),
-                new Pair<Integer, MenuIngredient>(3, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(3, new MenuIngredient(new Ingredient(11, "pineapple"), 5)),
-                new Pair<Integer, MenuIngredient>(4, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(4, new MenuIngredient(new Ingredient(10, "ham"), 4)),
-                new Pair<Integer, MenuIngredient>(5, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(5, new MenuIngredient(new Ingredient(5, "dough"), 3)),
-                new Pair<Integer, MenuIngredient>(5, new MenuIngredient(new Ingredient(6, "dough"), 3)),
-                new Pair<Integer, MenuIngredient>(5, new MenuIngredient(new Ingredient(7, "dough"), 3)),
-                new Pair<Integer, MenuIngredient>(6, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(6, new MenuIngredient(new Ingredient(3, "cheese"), 6)),
-                new Pair<Integer, MenuIngredient>(7, new MenuIngredient(new Ingredient(1, "dough"), 10)),
-                new Pair<Integer, MenuIngredient>(7, new MenuIngredient(new Ingredient(8, "olives"), 5)),
-                new Pair<Integer, MenuIngredient>(7, new MenuIngredient(new Ingredient(13, "fish"), 1))
+                new Pair<>(1, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(1, new MenuIngredient(new Ingredient(2, "sauce"), 3)),
+                new Pair<>(1, new MenuIngredient(new Ingredient(3, "cheese"), 2)),
+                new Pair<>(1, new MenuIngredient(new Ingredient(9, "basil"), 1)),
+                new Pair<>(2, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(2, new MenuIngredient(new Ingredient(4, "pepperoni"), 3)),
+                new Pair<>(3, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(3, new MenuIngredient(new Ingredient(11, "pineapple"), 5)),
+                new Pair<>(4, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(4, new MenuIngredient(new Ingredient(10, "ham"), 4)),
+                new Pair<>(5, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(5, new MenuIngredient(new Ingredient(5, "dough"), 3)),
+                new Pair<>(5, new MenuIngredient(new Ingredient(6, "dough"), 3)),
+                new Pair<>(5, new MenuIngredient(new Ingredient(7, "dough"), 3)),
+                new Pair<>(6, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(6, new MenuIngredient(new Ingredient(3, "cheese"), 6)),
+                new Pair<>(7, new MenuIngredient(new Ingredient(1, "dough"), 10)),
+                new Pair<>(7, new MenuIngredient(new Ingredient(8, "olives"), 5)),
+                new Pair<>(7, new MenuIngredient(new Ingredient(13, "fish"), 1))
         );
         data.forEach(entity ->
                 menuService.assignIngredient(entity.getValue0(), entity.getValue1())
