@@ -26,7 +26,7 @@ public class EdgeService {
         Iterable<Edge> all = edgeRepository.findAll();
         ArrayList<ArrayList<Edge>> graph = new ArrayList<>();
         all.forEach(edge -> {
-            var adjacency = new ArrayList<>(List.of(edge));
+            ArrayList<Edge> adjacency = new ArrayList<>(List.of(edge));
             edge.getMapsById().forEach(id -> adjacency.add(id.getEdgeByNeighbourId()));
             graph.add(adjacency);
         });

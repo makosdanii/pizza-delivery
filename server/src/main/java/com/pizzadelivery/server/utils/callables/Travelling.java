@@ -60,10 +60,10 @@ public class Travelling implements Callable<String> {
     @Override
     public String call() {
         try {
-            var route = navigation.getRoute(car);
-            var distance = navigation.getDistance(car);
-            var delivering = !foodOrders.isEmpty();
-            var id = delivering ? foodOrders.get(0).getUserByUserId().getId() : 0;
+            Edge[] route = navigation.getRoute(car);
+            int distance = navigation.getDistance(car);
+            boolean delivering = !foodOrders.isEmpty();
+            int id = delivering ? foodOrders.get(0).getUserByUserId().getId() : 0;
 
             System.out.printf("Car %d - setting off for a %d long route to %s%n",
                     car.getId(), distance,

@@ -48,7 +48,7 @@ public class Navigation {
      * @return accumulated distance of the route's edges
      */
     public Integer navigate(Car car, Edge current, Edge target) {
-        var result = dijkstraShortestPath(current, target);
+        Edge[] result = dijkstraShortestPath(current, target);
         routes.put(car, result);
 
         return Arrays.stream(result).reduce(0, (acc, curr) -> acc + curr.getEdgeWeight(), Integer::sum);
@@ -76,7 +76,7 @@ public class Navigation {
             parent[j] = 0;
         }
 
-        var node = current.clone();
+        Edge node = current.clone();
         int index = node.getId() - 1;
         node.setEdgeWeight(0);
 

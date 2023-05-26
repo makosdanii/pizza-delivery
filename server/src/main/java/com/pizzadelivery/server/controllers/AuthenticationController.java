@@ -72,7 +72,7 @@ public class AuthenticationController {
                             token, domain, maxAge, path));
             return ResponseEntity.status(HttpStatus.OK).headers(headers).body(Collections.singletonMap("id", id));
         } else {
-            var map = new HashMap<String, String>();
+            Map<String, String> map = new HashMap<>();
             map.put("token", token);
             map.put("id", id);
             return ResponseEntity.ok(map);

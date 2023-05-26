@@ -43,7 +43,7 @@ public class InventoryService extends ServiceORM<Inventory> {
     }
 
     public int readInventoryLatestQt(Ingredient ingredient) {
-        var inventory = inventoryRepository
+        List<Inventory> inventory = inventoryRepository
                 .findByIdIngredientByIngredientId(ingredient,
                         Sort.by(Sort.Direction.DESC, "id.modifiedAt"));
         return inventory.isEmpty() ? 0 : inventory.get(0).getCurrent();
@@ -55,8 +55,8 @@ public class InventoryService extends ServiceORM<Inventory> {
     public List<Inventory> fillInventory() {
         List<Inventory> inventories = new ArrayList<>();
         ingredientRepository.findAll().forEach(ingredient -> {
-            var current = readInventoryLatestQt(ingredient);
-            var deficit = INVENTORY_CAPACITY - current;
+            int current = readInventoryLatestQt(ingredient);
+            int deficit = INVENTORY_CAPACITY - current;
             if (deficit > 0)
                 inventories.add(modifyInventory(new Inventory(deficit * ingredient.getPrice(), deficit, ingredient),
                         true));
@@ -107,7 +107,7 @@ public class InventoryService extends ServiceORM<Inventory> {
     }
 
     public Iterable<Inventory> deleteInventory(int ingredientId) {
-        var ingredient = ingredientRepository.findById(ingredientId)
+        Ingredient ingredient = ingredientRepository.findById(ingredientId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND));
         try {
             List<Inventory> records = inventoryRepository

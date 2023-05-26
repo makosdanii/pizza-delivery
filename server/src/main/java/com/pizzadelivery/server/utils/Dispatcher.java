@@ -112,14 +112,14 @@ public class Dispatcher {
 
         // first car which can deliver,
         // depending on if car's percents cover all the orders' ingredients' quantities, is the best option for closeness
-        var eligible = false;
+        boolean eligible = false;
         for (Car car : availableCars) {
             // we need the current carIngredient quantities in the local scope
             final List<CarIngredient> carIngredients = carService.listCarIngredients(car);
 
             // check if it has all the ingredient amounts which needed to bake onboard
             eligible = sumMenuIngredients.stream().allMatch(ingredient -> {
-                var carIngredientCorresponding = carIngredients.stream()
+                Optional<CarIngredient> carIngredientCorresponding = carIngredients.stream()
                         .filter(carIngredient -> carIngredient.getIngredientByIngredientId()
                                 .equals(ingredient.getIngredientByIngredientId()))
                         .findFirst();
@@ -183,7 +183,7 @@ public class Dispatcher {
      */
     private void setOff(Car car, Edge destination, List<FoodOrder> foodOrders) {
         navigation.navigate(car, carLocations.get(car), destination);
-        var task = applicationContext.getBean(Travelling.class);
+        Travelling task = applicationContext.getBean(Travelling.class);
         task.setNavigation(navigation);
         task.setCar(car);
         task.setMap(carLocations);
@@ -287,7 +287,7 @@ public class Dispatcher {
         // menuIngredient summarized qt is set when on the ingredient's first appearance in allMenuIngredient,
         // later it's ignored when already in sumIngredients
         allMenuIngredients.forEach(menuIngredient -> {
-            var alreadyContainedIngredient = sumMenuIngredients.stream().filter(ingredient -> ingredient
+            Optional<MenuIngredient> alreadyContainedIngredient = sumMenuIngredients.stream().filter(ingredient -> ingredient
                     .getIngredientByIngredientId().equals(menuIngredient.getIngredientByIngredientId())).findFirst();
             if (alreadyContainedIngredient.isEmpty()) {
                 menuIngredient.setQuantity(allMenuIngredients.stream()
@@ -309,7 +309,7 @@ public class Dispatcher {
      * @param sumMenuIngredients the basis of filtering
      */
     private void filterForOrdersWithFaultyIngredients(List<FoodOrder> foodOrders, List<MenuIngredient> sumMenuIngredients) {
-        var faulty = new ArrayList<MenuIngredient>();
+        List faulty = new ArrayList<MenuIngredient>();
         for (MenuIngredient sumMenuIngredient : sumMenuIngredients) {
             if (inventoryService.readInventoryLatestQt(sumMenuIngredient.getIngredientByIngredientId())
                     < sumMenuIngredient.getQuantity()) {
@@ -362,7 +362,7 @@ public class Dispatcher {
         carLocations.remove(car);
         car.setUserByUserId(null);
         try {
-            var entity = carService.updateCar(car.getId(), car);
+            Car entity = carService.updateCar(car.getId(), car);
             carService.persist(entity);
         } catch (AlreadyExistsException ex) {
             throw new RuntimeException(ex);

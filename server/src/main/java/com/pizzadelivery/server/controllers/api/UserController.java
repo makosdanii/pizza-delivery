@@ -67,7 +67,7 @@ public class UserController extends Controller {
     @PostMapping("/{id}/order")
     public ResponseEntity<Integer> placeOrder(@PathVariable @Positive @P("id") int id,
                                               @RequestBody @Validated(NonValidatedOnPersistTime.class) List<FoodOrder> foodOrders) {
-        var order = userService.placeOrder(id, foodOrders);
+        int order = userService.placeOrder(id, foodOrders);
         return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 }

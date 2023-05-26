@@ -26,7 +26,7 @@ public class OrderController {
     @PreAuthorize("hasAnyAuthority('admin', 'customer')")
     @GetMapping
     public Iterable<FoodOrder> readFoodOrders(@RequestParam(required = false) Date before) {
-        var isAdmin = SecurityContextHolder.getContext().getAuthentication()
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new SimpleGrantedAuthority("admin"));
         return orderService.readOrders(before, isAdmin);
     }
@@ -34,7 +34,7 @@ public class OrderController {
     @PreAuthorize("hasAuthority('admin')")
     @DeleteMapping("/{id}")
     public Iterable<FoodOrder> deleteFoodOrder(@PathVariable int id) {
-        var orders = orderService.deleteOrder(id);
+        Iterable<FoodOrder> orders = orderService.deleteOrder(id);
         if (!orders.iterator().hasNext()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return orders;
     }

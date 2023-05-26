@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Accepts GET request, with authorization Header. Its only purpose is to fill up DB with test data.
- * So it should only be called after DB initialization.
+ * So it should only be called once after DB initialization.
  */
 @RestController
 @CrossOrigin
@@ -46,18 +46,18 @@ public class FillController extends Controller {
     }
 
     @GetMapping("/roles")
-    public String roles() throws AlreadyExistsException {
+    public List<Role> roles() throws AlreadyExistsException {
         var data = List.of(new Role("customer"),
                 new Role("driver"),
                 new Role("chef"));
         for (var entity : data) {
             roleService.createRole(entity);
         }
-        return "OK";
+        return data;
     }
 
     @GetMapping("/users")
-    public String users() throws AlreadyExistsException {
+    public List<User> users() throws AlreadyExistsException {
         var data = List.of(new User("john.smith@example.com", "John Smith", "verysecret", new Role(1, "admin")),
                 new User("emily.johnson@example.com", "Emily Johnson", "verysecret", new Role(2, "customer")),
                 new User("david.williams@example.com", "David Williams", "verysecret", new Role(3, "driver")),
@@ -71,29 +71,29 @@ public class FillController extends Controller {
         for (var entity : data) {
             userService.createUser(entity);
         }
-        return "OK";
+        return data;
     }
 
     @GetMapping("/cars")
-    public String cars() throws AlreadyExistsException {
+    public List<Car> cars() throws AlreadyExistsException {
         var data = List.of(new Car("hsd-675"), new Car("esb-747"), new Car("sle-723"), new Car("nrb-236"));
         for (var entity : data) {
             carService.createCar(entity);
         }
-        return "OK";
+        return data;
     }
 
     @GetMapping("/allergies")
-    public String allergies() throws AlreadyExistsException {
+    public List<Allergy> allergies() throws AlreadyExistsException {
         var data = List.of(new Allergy("Milk"), new Allergy("Peanuts"), new Allergy("Soy"), new Allergy("Wheat"), new Allergy("Fish"));
         for (var entity : data) {
             allergyService.createAllergy(entity);
         }
-        return "OK";
+        return data;
     }
 
     @GetMapping("/ingredients")
-    public String ingredients() throws AlreadyExistsException {
+    public List<Ingredient> ingredients() throws AlreadyExistsException {
         var data = List.of(new Ingredient("Pizza Dough", 10, new Allergy(4, "Wheat")),
                 new Ingredient("Tomato Sauce", 20),
                 new Ingredient("Mozzarella Cheese", 40, new Allergy(1, "Milk")),
@@ -110,11 +110,11 @@ public class FillController extends Controller {
         for (var entity : data) {
             ingredientService.createIngredient(entity);
         }
-        return "OK";
+        return data;
     }
 
     @GetMapping("/menus")
-    public String menus() throws AlreadyExistsException {
+    public List<Menu> menus() throws AlreadyExistsException {
         var data = List.of(new Menu("Margherita Pizza", 200),
                 new Menu("Pepperoni Pizza", 300),
                 new Menu("Hawaiian Pizza", 250),
@@ -125,11 +125,11 @@ public class FillController extends Controller {
         for (var entity : data) {
             menuService.createMenu(entity);
         }
-        return "OK";
+        return data;
     }
 
     @GetMapping("/menu-ingredients")
-    public String menuIngredients() {
+    public List<MenuIngredient> menuIngredients() {
         var data = List.of(
                 new Pair<>(1, new MenuIngredient(new Ingredient(1, "dough"), 10)),
                 new Pair<>(1, new MenuIngredient(new Ingredient(2, "sauce"), 3)),
@@ -154,6 +154,6 @@ public class FillController extends Controller {
         data.forEach(entity ->
                 menuService.assignIngredient(entity.getValue0(), entity.getValue1())
         );
-        return "OK";
+        return data.stream().map(Pair::getValue1).toList();
     }
 }

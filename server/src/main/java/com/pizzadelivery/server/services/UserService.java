@@ -65,7 +65,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        var user = userRepository.findByEmail(email);
+        List<User> user = userRepository.findByEmail(email);
 
         if (user.isEmpty()) throw new UsernameNotFoundException(email);
 
@@ -129,7 +129,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
                 .orElseThrow(() -> new ConstraintViolationException("Invalid user id", new HashSet<>()));
 
         //userByUserId already validated, now check inside
-        var address = Optional
+        User address = Optional
                 .ofNullable(foodOrders.get(0).getUserByUserId())
                 .orElseThrow(() -> new ConstraintViolationException("Missing address", new HashSet<>()));
         user.setStreetNameByStreetNameId(Optional.ofNullable(address.getStreetNameByStreetNameId()).orElseThrow());
@@ -160,7 +160,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
             throw new AlreadyExistsException();
         }
 
-        var role = roleRepository.findById(user.getRoleByRoleId().getId()).orElseThrow(() ->
+        Role role = roleRepository.findById(user.getRoleByRoleId().getId()).orElseThrow(() ->
                 new ConstraintViolationException("Invalid ID", new HashSet<>()));
 
         //if there's no authenticated user then only customer user can be created
@@ -176,7 +176,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
                 .getAuthorities().contains(new SimpleGrantedAuthority("admin"))) {
             user.setRoleByRoleId(role);
         } else {
-            var sufficientAuthentication = new SimpleGrantedAuthority(role.getName());
+            GrantedAuthority sufficientAuthentication = new SimpleGrantedAuthority(role.getName());
 
             if (!SecurityContextHolder.getContext().getAuthentication()
                     .getAuthorities().contains(sufficientAuthentication)) {
@@ -187,7 +187,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
         }
 
         if (user.getStreetNameByStreetNameId() != null) {
-            var street = streetRepository.findById(user.getStreetNameByStreetNameId().getId()).orElse(new StreetName());
+            StreetName street = streetRepository.findById(user.getStreetNameByStreetNameId().getId()).orElse(new StreetName());
             if (street.getId() == UNASSIGNED) {
                 throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
             } else if (user.getHouseNo() > street.getUntilNo()) {

@@ -32,13 +32,13 @@ public class OrderService extends ServiceORM<FoodOrder> {
         } else if (isAdmin) {
             return foodOrderRepository.findAll();
         } else {
-            var customer = (UserAuthorizationDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            UserAuthorizationDetails customer = (UserAuthorizationDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             return foodOrderRepository.findAllByUserByUserId(userRepository.findById(customer.getId()).get());
         }
     }
 
     public Iterable<FoodOrder> deleteOrder(int id) {
-        var order = foodOrderRepository.findById(id).orElse(new FoodOrder());
+        FoodOrder order = foodOrderRepository.findById(id).orElse(new FoodOrder());
         if (order.getId() != UNASSIGNED) {
             foodOrderRepository.deleteById(id);
             return readOrders(null, true);

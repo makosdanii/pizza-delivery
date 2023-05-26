@@ -62,7 +62,7 @@ public class CarService extends ServiceORM<Car> {
         if (isAdmin) {
             return carRepository.findAll();
         } else {
-            var driver = (UserAuthorizationDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            UserAuthorizationDetails driver = (UserAuthorizationDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             return carRepository.findAllByUserByUserIdOrUserByUserIdIsNull(userRepository.findById(driver.getId()).get());
         }
     }
@@ -179,7 +179,7 @@ public class CarService extends ServiceORM<Car> {
 
         if (car.getUserByUserId() == null) return;
 
-        var user = userRepository.findById(car.getUserByUserId().getId());
+        Optional<User> user = userRepository.findById(car.getUserByUserId().getId());
 
         if (!user.isPresent() || !user.get().getRoleByRoleId().getName().equals("driver")) {
             throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());

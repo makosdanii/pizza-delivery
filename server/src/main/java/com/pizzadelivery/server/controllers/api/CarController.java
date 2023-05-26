@@ -39,7 +39,7 @@ public class CarController extends Controller {
     @PreAuthorize("hasAnyAuthority('admin', 'driver')")
     @GetMapping
     public Iterable<Car> listCar() {
-        var isAdmin = SecurityContextHolder.getContext().getAuthentication()
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new SimpleGrantedAuthority("admin"));
         return carService.listAll(isAdmin);
     }
