@@ -4,16 +4,19 @@ import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Objects;
 
 @Embeddable
 public class InventoryPK implements Serializable {
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     @Basic
     @Column(name = "modified_at", nullable = false)
-    private Timestamp modifiedAt;
+    private Date modifiedAt;
     @Null(groups = NonValidatedOnPersistTime.class)
     @ManyToOne
     @JoinColumn(name = "car_id", referencedColumnName = "id", nullable = false)
@@ -23,11 +26,11 @@ public class InventoryPK implements Serializable {
     @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
     private Ingredient ingredientByIngredientId;
 
-    public Timestamp getModifiedAt() {
+    public Date getModifiedAt() {
         return modifiedAt;
     }
 
-    public void setModifiedAt(Timestamp modifiedAt) {
+    public void setModifiedAt(Date modifiedAt) {
         this.modifiedAt = modifiedAt;
     }
 
@@ -63,16 +66,13 @@ public class InventoryPK implements Serializable {
     }
 
     public InventoryPK() {
-        modifiedAt = new Timestamp(System.currentTimeMillis());
     }
 
     public InventoryPK(Ingredient ingredientByIngredientId) {
-        modifiedAt = new Timestamp(System.currentTimeMillis());
         this.ingredientByIngredientId = ingredientByIngredientId;
     }
 
     public InventoryPK(Car carByCarId, Ingredient ingredientByIngredientId) {
-        modifiedAt = new Timestamp(System.currentTimeMillis());
         this.carByCarId = carByCarId;
         this.ingredientByIngredientId = ingredientByIngredientId;
     }

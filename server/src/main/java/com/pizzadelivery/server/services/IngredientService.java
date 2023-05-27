@@ -32,6 +32,14 @@ public class IngredientService extends ServiceORM<Ingredient> {
         return ingredientRepository.findById(id).orElse(new Ingredient());
     }
 
+    public Ingredient findFuel() {
+        try {
+            return ingredientRepository.findByName("fuel").get(0);
+        } catch (IndexOutOfBoundsException e) {
+            throw new ConstraintViolationException("Necessary ingredient is yet to be created", new HashSet<>());
+        }
+    }
+
     public Iterable<Ingredient> listAll() {
         return ingredientRepository.findAll();
     }

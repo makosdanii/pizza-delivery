@@ -158,7 +158,7 @@ export default {
   },
   async mounted() {
     this.selected = this.menuIngredients.map(ingredient => ingredient.ingredientByIngredientId.name)
-    if (!this.ingredients.length && role !== 'customer')
+    if (!this.ingredients.length && this.role !== 'customer')
       await this.listIngredients()
   },
 

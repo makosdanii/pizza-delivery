@@ -219,7 +219,7 @@ export default {
             this.color = "red"
             this.snack = true
           }
-        })
+        }).catch(err => console.log(err))
       } else if (this.stepper < 2) {
         props.onClick()
       }

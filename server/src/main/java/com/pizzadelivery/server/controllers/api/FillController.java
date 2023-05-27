@@ -45,6 +45,13 @@ public class FillController extends Controller {
         this.menuService = menuService;
     }
 
+    @GetMapping("/basic")
+    public User basic() throws AlreadyExistsException {
+        User user = new User("john.smith@example.com", "John Smith", "verysecret", new Role(1, "admin"));
+        userService.createUser(user);
+        return user;
+    }
+
     @GetMapping("/roles")
     public List<Role> roles() throws AlreadyExistsException {
         var data = List.of(new Role("customer"),
@@ -59,13 +66,13 @@ public class FillController extends Controller {
     @GetMapping("/users")
     public List<User> users() throws AlreadyExistsException {
         var data = List.of(new User("john.smith@example.com", "John Smith", "verysecret", new Role(1, "admin")),
-                new User("emily.johnson@example.com", "Emily Johnson", "verysecret", new Role(2, "customer")),
+                new User("emily.johnson@example.com", "Emily Johnson", "verysecret", new Role(3, "driver")),
                 new User("david.williams@example.com", "David Williams", "verysecret", new Role(3, "driver")),
                 new User("sarah.davis@example.com", "Sarah Davis", "verysecret", new Role(3, "driver")),
-                new User("michael.brown@example.com", "Michael Brown", "verysecret", new Role(2, "customer")),
-                new User("jennifer.anderson@example.com", "Jennifer Anderson", "verysecret", new Role(2, "customer")),
+                new User("michael.brown@example.com", "Michael Brown", "verysecret", new Role(3, "driver")),
+                new User("jennifer.anderson@example.com", "Jennifer Anderson", "verysecret", new Role(4, "chef")),
                 new User("christopher.wilson@example.com", "Christopher Wilson", "verysecret", new Role(2, "customer")),
-                new User("daniel.martinez@example.com", "Daniel Martinez", "verysecret", new Role(4, "chef")),
+                new User("daniel.martinez@example.com", "Daniel Martinez", "verysecret", new Role(2, "customer")),
                 new User("amanda.thomas@example.com", "Amanda Thomas", "verysecret", new StreetName(1, "Arany"), 1, new Role(2, "customer")),
                 new User("jessica.taylor@example.com", "Jessica Taylor", "verysecret", new StreetName(3, "Petofi"), 1, new Role(2, "customer")));
         for (var entity : data) {
@@ -94,7 +101,8 @@ public class FillController extends Controller {
 
     @GetMapping("/ingredients")
     public List<Ingredient> ingredients() throws AlreadyExistsException {
-        var data = List.of(new Ingredient("Pizza Dough", 10, new Allergy(4, "Wheat")),
+        var data = List.of(
+                new Ingredient("Pizza Dough", 10, new Allergy(4, "Wheat")),
                 new Ingredient("Tomato Sauce", 20),
                 new Ingredient("Mozzarella Cheese", 40, new Allergy(1, "Milk")),
                 new Ingredient("Pepperoni", 50),
@@ -106,7 +114,8 @@ public class FillController extends Controller {
                 new Ingredient("Ham", 60),
                 new Ingredient("Pineapple", 50),
                 new Ingredient("Spinach", 30),
-                new Ingredient("Anchovies", 70, new Allergy(5, "Fish")));
+                new Ingredient("Anchovies", 70, new Allergy(5, "Fish")),
+                new Ingredient("fuel", 100));
         for (var entity : data) {
             ingredientService.createIngredient(entity);
         }

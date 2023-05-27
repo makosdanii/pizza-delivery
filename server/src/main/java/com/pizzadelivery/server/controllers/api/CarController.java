@@ -55,7 +55,7 @@ public class CarController extends Controller {
     public ResponseEntity<Car> updateCar(@PathVariable @Positive int id, @RequestBody @Valid Car car) throws AlreadyExistsException {
         car = carService.updateCar(id, car);
         if (car.getId() != UNASSIGNED) {
-            carService.persist(car);
+            carService.saveCarInTransaction(car);
         }
 
         return new ResponseEntity<>(car, car.getId() == UNASSIGNED ? HttpStatus.NOT_FOUND : HttpStatus.CREATED);

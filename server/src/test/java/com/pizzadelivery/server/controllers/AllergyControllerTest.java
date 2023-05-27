@@ -2,9 +2,7 @@ package com.pizzadelivery.server.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pizzadelivery.server.data.entities.Allergy;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -16,11 +14,13 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 class AllergyControllerTest extends ControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     private MockMvc mvc;
+    private static int created;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +36,7 @@ class AllergyControllerTest extends ControllerTest {
         var properLactose = new ObjectMapper().writeValueAsString(new Allergy("lactose"));
         var duplicate = new ObjectMapper().writeValueAsString(new Allergy("gluten"));
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/allergy")
@@ -60,13 +60,20 @@ class AllergyControllerTest extends ControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(MockMvcRequestBuilders
+        var result = mvc.perform(MockMvcRequestBuilders
                         .post("/allergy")
                         .content(properLactose)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
+                .andReturn();
+
+        created = new ObjectMapper()
+                .createParser(result
+                        .getResponse().getContentAsString())
+                .readValueAs(Allergy.class)
+                .getId();
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/allergy")
@@ -81,7 +88,7 @@ class AllergyControllerTest extends ControllerTest {
     void updateAllergy() throws Exception {
         var glucose = new ObjectMapper().writeValueAsString(new Allergy("glucose"));
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .put("/allergy/99")
@@ -91,7 +98,7 @@ class AllergyControllerTest extends ControllerTest {
                 .andExpect(status().isNotFound());
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/allergy/2")
+                        .put("/allergy/" + created)
                         .content(glucose)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -100,7 +107,7 @@ class AllergyControllerTest extends ControllerTest {
 
         var alreadyExist = new ObjectMapper().writeValueAsString(new Allergy("gluten"));
         mvc.perform(MockMvcRequestBuilders
-                        .put("/allergy/2")
+                        .put("/allergy/" + created)
                         .content(alreadyExist)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -110,7 +117,7 @@ class AllergyControllerTest extends ControllerTest {
     @Order(3)
     @Test
     void deleteAllergy() throws Exception {
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .delete("/allergy/99")
@@ -118,7 +125,7 @@ class AllergyControllerTest extends ControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
         mvc.perform(MockMvcRequestBuilders
-                        .delete("/allergy/2")
+                        .delete("/allergy/" + created)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

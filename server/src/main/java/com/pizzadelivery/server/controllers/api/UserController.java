@@ -1,7 +1,6 @@
 package com.pizzadelivery.server.controllers.api;
 
 import com.pizzadelivery.server.controllers.Controller;
-import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.User;
 import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
@@ -15,8 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
@@ -61,13 +58,5 @@ public class UserController extends Controller {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable @Positive @P("id") int id) {
         return new ResponseEntity<>("", userService.deleteUser(id) ? HttpStatus.OK : HttpStatus.NOT_FOUND);
-    }
-
-    @PreAuthorize("principal.getId() == #id")
-    @PostMapping("/{id}/order")
-    public ResponseEntity<Integer> placeOrder(@PathVariable @Positive @P("id") int id,
-                                              @RequestBody @Validated(NonValidatedOnPersistTime.class) List<FoodOrder> foodOrders) {
-        int order = userService.placeOrder(id, foodOrders);
-        return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 }

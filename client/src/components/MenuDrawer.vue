@@ -70,10 +70,10 @@
         <v-list-item-title>Food ingredients</v-list-item-title>
       </v-list-item>
 
-      <v-divider v-if="role !== 'chef' && role.length" class="mx-4" inset horizontal></v-divider>
+      <v-divider v-if="role === 'admin' && role.length" class="mx-4" inset horizontal></v-divider>
 
       <v-list-item
-          v-if="role === 'admin' || role === 'customer'"
+          v-if="role === 'admin'"
           @click="$router.push('/history')"
           link
           prepend-icon="mdi-history"

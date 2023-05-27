@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pizzadelivery.server.data.entities.Ingredient;
 import com.pizzadelivery.server.data.entities.Menu;
 import com.pizzadelivery.server.data.entities.MenuIngredient;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -17,11 +15,13 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 class MenuControllerTest extends ControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     private MockMvc mvc;
+    private static int created;
 
     @BeforeEach
     void setUp() {
@@ -35,14 +35,21 @@ class MenuControllerTest extends ControllerTest {
         var valid = new ObjectMapper().writeValueAsString(new Menu("pizza", 100));
         var duplicate = new ObjectMapper().writeValueAsString(new Menu("pizza", 200));
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
-        mvc.perform(MockMvcRequestBuilders
+        var result = mvc.perform(MockMvcRequestBuilders
                         .post("/menu")
                         .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        created = new ObjectMapper()
+                .createParser(result
+                        .getResponse().getContentAsString())
+                .readValueAs(Menu.class)
+                .getId();
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/menu")
@@ -58,28 +65,28 @@ class MenuControllerTest extends ControllerTest {
         var nonExistent = new ObjectMapper().writeValueAsString(
                 new MenuIngredient(new Ingredient(99, "invalid"), 1));
         var valid = new ObjectMapper().writeValueAsString(
-                new MenuIngredient(new Ingredient(1, "flour"), 20));
+                new MenuIngredient(new Ingredient(1, "dough"), 20));
         var validUpdate = new ObjectMapper().writeValueAsString(
-                new MenuIngredient(new Ingredient(1, "flour"), 25));
+                new MenuIngredient(new Ingredient(1, "dough"), 25));
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/menu/1/ingredient")
+                        .put("/menu/" + created + "/ingredient")
                         .content(nonExistent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/menu/1/ingredient")
+                        .put("/menu/" + created + "/ingredient")
                         .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/menu/1/ingredient")
+                        .put("/menu/" + created + "/ingredient")
                         .content(validUpdate)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -89,10 +96,10 @@ class MenuControllerTest extends ControllerTest {
     @Order(3)
     @Test
     void unAssignIngredient() throws Exception {
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
-                        .delete("/menu/1/1")
+                        .delete("/menu/" + created + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

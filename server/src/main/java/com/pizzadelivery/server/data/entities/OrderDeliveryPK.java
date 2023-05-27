@@ -2,26 +2,29 @@ package com.pizzadelivery.server.data.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Objects;
 
 @Embeddable
 public class OrderDeliveryPK implements Serializable {
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     @Basic
     @Column(name = "delivered_at", nullable = false)
-    private Timestamp deliveredAt;
+    private Date deliveredAt;
     @NotNull
     @OneToOne
     @JoinColumn(name = "food_order_id", referencedColumnName = "id", nullable = false)
     private FoodOrder foodOrderByFoodOrderId;
 
-    public Timestamp getDeliveredAt() {
+    public Date getDeliveredAt() {
         return deliveredAt;
     }
 
-    public void setDeliveredAt(Timestamp deliveredAt) {
+    public void setDeliveredAt(Date deliveredAt) {
         this.deliveredAt = deliveredAt;
     }
 
@@ -47,11 +50,9 @@ public class OrderDeliveryPK implements Serializable {
     }
 
     public OrderDeliveryPK() {
-        deliveredAt = new Timestamp(System.currentTimeMillis());
     }
 
     public OrderDeliveryPK(FoodOrder foodOrderByFoodOrderId) {
-        deliveredAt = new Timestamp(System.currentTimeMillis());
         this.foodOrderByFoodOrderId = foodOrderByFoodOrderId;
     }
 }

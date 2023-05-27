@@ -5,8 +5,9 @@ import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Objects;
 
 @Entity
@@ -16,9 +17,11 @@ public class FoodOrder {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     @Basic
     @Column(name = "ordered_at", nullable = false)
-    private Timestamp orderedAt;
+    private Date orderedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
@@ -41,11 +44,11 @@ public class FoodOrder {
         this.id = id;
     }
 
-    public Timestamp getOrderedAt() {
+    public Date getOrderedAt() {
         return orderedAt;
     }
 
-    public void setOrderedAt(Timestamp orderedAt) {
+    public void setOrderedAt(Date orderedAt) {
         this.orderedAt = orderedAt;
     }
 

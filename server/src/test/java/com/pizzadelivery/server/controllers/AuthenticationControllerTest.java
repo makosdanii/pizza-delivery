@@ -29,7 +29,7 @@ class AuthenticationControllerTest {
 
     @Test
     void authenticateSuccessfully() throws Exception {
-        var admin = new AuthenticationDTO("admin@domain.com", "secret");
+        var admin = new AuthenticationDTO("john.smith@example.com", "verysecret");
         mvc.perform(MockMvcRequestBuilders
                         .post("/authenticate")
                         .content(new ObjectMapper().writeValueAsString(admin))
@@ -41,7 +41,7 @@ class AuthenticationControllerTest {
 
     @Test
     void authenticateUnsuccessfully() throws Exception {
-        var badCredentials = new AuthenticationDTO("admin@domain.com", "invalid");
+        var badCredentials = new AuthenticationDTO("john.smith@example.com", "invalid");
         mvc.perform(MockMvcRequestBuilders
                 .post("/authenticate")
                 .content(new ObjectMapper().writeValueAsString(badCredentials))

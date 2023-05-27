@@ -1,6 +1,7 @@
 package com.pizzadelivery.server.config.filter;
 
 import com.pizzadelivery.server.config.utils.JwtTokenUtil;
+import com.pizzadelivery.server.data.entities.User;
 import com.pizzadelivery.server.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -21,6 +22,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+
+import static com.pizzadelivery.server.services.ServiceORM.UNASSIGNED;
 
 /**
  * Filters before processing the requests, if valid authentication token is found
@@ -59,8 +62,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String BEARER = "Bearer ";
 
         if (header != null && header.startsWith("root")) {
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                    null, null, List.of(new SimpleGrantedAuthority("admin")));
+            User user = userService.findAdmin();
+
+            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken;
+            if (user.getId() == UNASSIGNED) {
+                usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                        null, null, List.of(new SimpleGrantedAuthority("admin")));
+            } else {
+                UserDetails userDetails = userService.loadUserByUsername(user.getEmail());
+                usernamePasswordAuthenticationToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+            }
+
             usernamePasswordAuthenticationToken
                     .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             // After setting the Authentication in the context, we specify

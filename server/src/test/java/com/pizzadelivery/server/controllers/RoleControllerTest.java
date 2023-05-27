@@ -1,15 +1,14 @@
 package com.pizzadelivery.server.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pizzadelivery.server.data.entities.Ingredient;
 import com.pizzadelivery.server.data.entities.Role;
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -18,25 +17,28 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 class RoleControllerTest extends ControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     private MockMvc mvc;
+    private static int created;
 
     @BeforeEach
     void setUp() {
         mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .build();
+        SecurityContextHolder.clearContext();
+
     }
 
     @Order(1)
     @Test
     void registerRole() throws Exception {
         var empty = new ObjectMapper().writeValueAsString(new Role());
-        final var valid = new ObjectMapper().writeValueAsString(new Role("customer"));
-        var properDriver = new ObjectMapper().writeValueAsString(new Role("driver"));
-        var properChef = new ObjectMapper().writeValueAsString(new Role("chef"));
+        final var valid = new ObjectMapper().writeValueAsString(new Role("guard"));
+        var duplicate = new ObjectMapper().writeValueAsString(new Role("guard"));
 
         //admin needs to authenticate
         Assertions.assertThrows(ServletException.class, () ->
@@ -46,7 +48,7 @@ class RoleControllerTest extends ControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)));
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/role")
@@ -55,44 +57,35 @@ class RoleControllerTest extends ControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(MockMvcRequestBuilders
+        var result = mvc.perform(MockMvcRequestBuilders
                         .post("/role")
                         .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
+                .andReturn();
+
+        created = new ObjectMapper()
+                .createParser(result
+                        .getResponse().getContentAsString())
+                .readValueAs(Ingredient.class)
+                .getId();
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/role")
-                        .content(valid)
+                        .content(duplicate)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
-
-        mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
-                        .content(properDriver)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
-
-        mvc.perform(MockMvcRequestBuilders
-                        .post("/role")
-                        .content(properChef)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
     }
 
     @Order(2)
     @Test
     void updateRole() throws Exception {
-        var cook = new ObjectMapper().writeValueAsString(new Role("cook"));
+        var cook = new ObjectMapper().writeValueAsString(new Role("bodyguard"));
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .put("/role/99")
@@ -102,7 +95,7 @@ class RoleControllerTest extends ControllerTest {
                 .andExpect(status().isNotFound());
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/role/4")
+                        .put("/role/" + created)
                         .content(cook)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -111,7 +104,7 @@ class RoleControllerTest extends ControllerTest {
 
         var alreadyExist = new ObjectMapper().writeValueAsString(new Role("admin"));
         mvc.perform(MockMvcRequestBuilders
-                        .put("/role/2")
+                        .put("/role/" + created)
                         .content(alreadyExist)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -121,7 +114,7 @@ class RoleControllerTest extends ControllerTest {
     @Order(3)
     @Test
     void deleteRole() throws Exception {
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .delete("/role/99")
@@ -129,7 +122,7 @@ class RoleControllerTest extends ControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
         mvc.perform(MockMvcRequestBuilders
-                        .delete("/role/4")
+                        .delete("/role/" + created)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

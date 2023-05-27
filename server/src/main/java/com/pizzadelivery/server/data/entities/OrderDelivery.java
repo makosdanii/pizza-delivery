@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Null;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 @Entity
 @Table(name = "order_delivery", schema = "pizza_delivery")
@@ -28,11 +28,11 @@ public class OrderDelivery {
         this.id = id;
     }
 
-    public Timestamp getDeliveredAt() {
+    public Date getDeliveredAt() {
         return id.getDeliveredAt();
     }
 
-    public void setDeliveredAt(Timestamp deliveredAt) {
+    public void setDeliveredAt(Date deliveredAt) {
         id.setDeliveredAt(deliveredAt);
     }
 

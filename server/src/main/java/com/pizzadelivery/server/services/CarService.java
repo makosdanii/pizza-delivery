@@ -1,10 +1,7 @@
 package com.pizzadelivery.server.services;
 
 import com.pizzadelivery.server.config.utils.UserAuthorizationDetails;
-import com.pizzadelivery.server.data.entities.Car;
-import com.pizzadelivery.server.data.entities.CarIngredient;
-import com.pizzadelivery.server.data.entities.Inventory;
-import com.pizzadelivery.server.data.entities.User;
+import com.pizzadelivery.server.data.entities.*;
 import com.pizzadelivery.server.data.repositories.*;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
@@ -14,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.*;
 
 import static com.pizzadelivery.server.utils.Dispatcher.CAR_CAPACITY;
@@ -70,10 +68,8 @@ public class CarService extends ServiceORM<Car> {
     // persist return value in transactional
     public Car updateCar(int id, Car car) throws AlreadyExistsException {
         Car old = carRepository.findById(id).orElse(new Car());
-        boolean authenticated = SecurityContextHolder.getContext()
-                .getAuthentication().isAuthenticated();
 
-        if (authenticated) {
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
             // only admin can update license plate
             if (!SecurityContextHolder.getContext()
                     .getAuthentication().getAuthorities()
@@ -120,6 +116,20 @@ public class CarService extends ServiceORM<Car> {
         return carIngredientRepository.findAllByIdCarByCarId(car);
     }
 
+    public int showCarFuelLevel(Car car) {
+        Ingredient fuel;
+        try {
+            fuel = ingredientRepository.findByName("fuel").get(0);
+        } catch (IndexOutOfBoundsException e) {
+            throw new ConstraintViolationException("Necessary ingredient is yet to be created", new HashSet<>());
+        }
+        CarIngredient fuelLevel = carIngredientRepository.findAllByIdCarByCarId(car).stream()
+                .filter(carIngredient -> carIngredient.getIngredientByIngredientId().equals(fuel))
+                .findFirst()
+                .orElse(new CarIngredient(0, fuel, car));
+        return fuelLevel.getCurrentQuantity();
+    }
+
 
     /**
      * @param car of which ingredients are filled
@@ -136,10 +146,12 @@ public class CarService extends ServiceORM<Car> {
             int deficit = CAR_CAPACITY - corresponding.getCurrentQuantity();
             if (deficit > 0) {
                 try {
-                    Inventory inventoryChange = inventoryService.modifyInventory(new Inventory(car, 0,
-                            deficit, ingredient), false);
-                    corresponding.setCurrentQuantity(CAR_CAPACITY);
+                    Inventory inventoryChange = null;
+                    if (!Objects.equals(corresponding.getIngredientByIngredientId().getName(), "fuel"))
+                        inventoryChange = inventoryService.modifyInventory(new Inventory(car, 0,
+                                deficit, ingredient), false);
 
+                    corresponding.setCurrentQuantity(CAR_CAPACITY);
                     ingredients.put(corresponding, inventoryChange);
                 } catch (ConstraintViolationException e) {
                     System.out.printf("Ingredient %s - Requested quantity (%d) unavailable%n", ingredient.getName(), deficit);
@@ -197,11 +209,17 @@ public class CarService extends ServiceORM<Car> {
                 && car.getUserByUserId().getId() != authenticated.getId();
     }
 
-    @Override
     @Transactional
-    public void persist(Object entity) {
-        entityManager.merge(entity);
-        entityManager.flush();
+    public void saveCarInTransaction(Car car) {
+        carRepository.save(car);
     }
 
+    @Transactional
+    public void saveIngredientInTransaction(CarIngredient carIngredient) {
+        carIngredientRepository.save(carIngredient);
+    }
+
+    public void saveDelivery(OrderDelivery orderDelivery) {
+        orderDeliveryRepository.save(orderDelivery);
+    }
 }

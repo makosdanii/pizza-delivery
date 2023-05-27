@@ -5,18 +5,11 @@ import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.Menu;
 import com.pizzadelivery.server.data.entities.Role;
 import com.pizzadelivery.server.data.entities.StreetName;
-import com.pizzadelivery.server.services.UserService;
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -27,14 +20,13 @@ import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 class UserControllerTest extends ControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     private MockMvc mvc;
-
-    @Autowired
-    UserService userService;
+    private static int created;
 
     @BeforeEach
     void setUp() {
@@ -81,13 +73,20 @@ class UserControllerTest extends ControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
 
-        mvc.perform(MockMvcRequestBuilders
+        var result = mvc.perform(MockMvcRequestBuilders
                         .post("/user/register")
                         .content(validWithAddress)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
+                .andReturn();
+
+        created = new ObjectMapper()
+                .createParser(result
+                        .getResponse().getContentAsString())
+                .readValueAs(com.pizzadelivery.server.data.entities.User.class)
+                .getId();
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/user/register")
@@ -124,7 +123,7 @@ class UserControllerTest extends ControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        authorize("admin@domain.com");
+        authorize("john.smith@example.com");
 
         mvc.perform(MockMvcRequestBuilders
                         .post("/user/register")
@@ -152,14 +151,14 @@ class UserControllerTest extends ControllerTest {
 
         //not her account
         Assertions.assertThrows(ServletException.class, () -> mvc.perform(MockMvcRequestBuilders
-                .put("/user/1")
+                .put("/user/" + (created - 1))
                 .content(withoutAddress)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)));
 
         //her account
         mvc.perform(MockMvcRequestBuilders
-                        .put("/user/3")
+                        .put("/user/" + created)
                         .content(withoutAddress)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -170,7 +169,7 @@ class UserControllerTest extends ControllerTest {
                 "secret", new Role(2, "customer")));
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/user/3")
+                        .put("/user/" + created)
                         .content(alreadyExist)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -180,7 +179,7 @@ class UserControllerTest extends ControllerTest {
                 "secret", new Role(1, "admin")));
 
         mvc.perform(MockMvcRequestBuilders
-                        .put("/user/3")
+                        .put("/user/" + created)
                         .content(forbiddenRole)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -189,73 +188,73 @@ class UserControllerTest extends ControllerTest {
 
     @Order(3)
     @Test
-    void deleteUser() throws Exception {
-        authorize("jane.doe@domain.com");
-
-        //not her account
-        Assertions.assertThrows(ServletException.class, () -> mvc.perform(MockMvcRequestBuilders
-                .delete("/user/1")
-                .accept(MediaType.APPLICATION_JSON)));
-
-        //her account
-        mvc.perform(MockMvcRequestBuilders
-                        .delete("/user/3")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
     void placeOrder() throws Exception {
         com.pizzadelivery.server.data.entities.User user =
-                new com.pizzadelivery.server.data.entities.User(9, "john.doe@domain.com",
+                new com.pizzadelivery.server.data.entities.User(7, "christopher.wilson@example.com",
                         new StreetName(1, "Baker str."), 1);
 
         var invalid = new ObjectMapper().writeValueAsString(List.of(
-                new FoodOrder(user, new Menu(32, "polyJuicePotion"))));
+                new FoodOrder(user, new Menu(99, "polyJuicePotion"))));
         var missingAddress = new ObjectMapper().writeValueAsString(List.of(
-                new FoodOrder(new com.pizzadelivery.server.data.entities.User(9, "john.doe@domain.com"),
-                        new Menu(1, "pizza"))));
+                new FoodOrder(new com.pizzadelivery.server.data.entities.User(7, "christopher.wilson@example.com"),
+                        new Menu(1, "Margherita"))));
         var valid = new ObjectMapper().writeValueAsString(List.of(
-                new FoodOrder(user, new Menu(1, "pizza"))));
+                new FoodOrder(user, new Menu(1, "Margherita"))));
 
-        UserDetails userDetails = userService.loadUserByUsername("john.doe@domain.com");
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+        authorize("christopher.wilson@example.com");
 
         // user can only order for himself
-        mvc.perform(MockMvcRequestBuilders
-                        .post("/user/2/order")
-                        .content(valid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
+        Assertions.assertThrows(ServletException.class, () -> mvc.perform(MockMvcRequestBuilders
+                .post("/order/6")
+                .content(valid)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)));
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/user/9/order")
+                        .post("/order/7")
                         .content(invalid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isBadRequest());
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/user/9/order")
+                        .post("/order/7")
                         .content(missingAddress)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isBadRequest());
 
 
         mvc.perform(MockMvcRequestBuilders
-                        .post("/user/9/order")
+                        .post("/order/7")
                         .content(valid)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
     }
 
-    // user entity would not work for serialization because password field
+
+    @Order(4)
+    @Test
+    void deleteUser() throws Exception {
+        authorize("jane.doe@domain.com");
+
+        //not her account
+        Assertions.assertThrows(ServletException.class, () -> mvc.perform(MockMvcRequestBuilders
+                .delete("/user/" + (created - 1))
+                .accept(MediaType.APPLICATION_JSON)));
+
+        //her account
+        mvc.perform(MockMvcRequestBuilders
+                        .delete("/user/" + created)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+
+    /**
+     * user entity would not work for serialization because password of field
+     */
     static class User {
         private final String email;
         private final String name;

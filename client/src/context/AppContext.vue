@@ -83,7 +83,7 @@ export default {
       await server.listAllergies().then(promise => this.allergies = promise.data).catch((err) => console.log(err))
     },
     async listIngredients() {
-      await server.listIngredients().then(promise => this.ingredients = promise.data).catch((err) => console.log(err))
+      await server.listIngredients().then(promise => this.ingredients = promise.data.filter(ingredient => ingredient.name !== 'fuel')).catch((err) => console.log(err))
     },
     setOrders(orders) {
       this.orders = orders

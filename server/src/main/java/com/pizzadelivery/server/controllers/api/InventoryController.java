@@ -14,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Date;
+import java.util.Date;
 
 @Validated
 @RestController
@@ -41,7 +41,7 @@ public class InventoryController extends Controller {
     @PostMapping
     public ResponseEntity<Inventory> modifyInventory(@RequestBody @Valid Inventory inventory) {
         inventory = inventoryService.modifyInventory(inventory, inventory.getExpense() > 0);
-        if (inventory != null) inventoryRepository.save(inventory);
+        if (inventory != null) inventoryService.saveInTransaction(inventory);
         return new ResponseEntity<>(inventory, inventory != null ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST);
     }
 

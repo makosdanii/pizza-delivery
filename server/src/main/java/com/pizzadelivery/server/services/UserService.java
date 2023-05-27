@@ -2,13 +2,13 @@ package com.pizzadelivery.server.services;
 
 
 import com.pizzadelivery.server.config.utils.UserAuthorizationDetails;
-import com.pizzadelivery.server.data.entities.FoodOrder;
 import com.pizzadelivery.server.data.entities.Role;
 import com.pizzadelivery.server.data.entities.StreetName;
 import com.pizzadelivery.server.data.entities.User;
-import com.pizzadelivery.server.data.repositories.*;
+import com.pizzadelivery.server.data.repositories.RoleRepository;
+import com.pizzadelivery.server.data.repositories.StreetRepository;
+import com.pizzadelivery.server.data.repositories.UserRepository;
 import com.pizzadelivery.server.exceptions.AlreadyExistsException;
-import com.pizzadelivery.server.utils.Dispatcher;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,31 +22,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService extends ServiceORM<User> implements UserDetailsService {
     UserRepository userRepository;
     StreetRepository streetRepository;
     RoleRepository roleRepository;
-    MenuRepository menuRepository;
-    FoodOrderRepository foodOrderRepository;
-    Dispatcher dispatcher;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        StreetRepository streetRepository,
-                       RoleRepository roleRepository,
-                       MenuRepository menuRepository,
-                       FoodOrderRepository foodOrderRepository,
-                       Dispatcher dispatcher
+                       RoleRepository roleRepository
     ) {
         this.userRepository = userRepository;
         this.streetRepository = streetRepository;
         this.roleRepository = roleRepository;
-        this.menuRepository = menuRepository;
-        this.foodOrderRepository = foodOrderRepository;
-        this.dispatcher = dispatcher;
     }
 
     private PasswordEncoder passwordEncoder;
@@ -95,6 +85,16 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
         return userRepository.findById(id).orElse(new User());
     }
 
+    public User findAdmin() {
+        try {
+            return userRepository.findByRoleByRoleId(roleRepository
+                            .findByName("admin").get(0))
+                    .get(0);
+        } catch (IndexOutOfBoundsException e) {
+            return new User();
+        }
+    }
+
     public Iterable<User> listAll() {
         return userRepository.findAll();
     }
@@ -122,36 +122,6 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
 
         userRepository.deleteById(id);
         return true;
-    }
-
-    public Integer placeOrder(int id, List<FoodOrder> foodOrders) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ConstraintViolationException("Invalid user id", new HashSet<>()));
-
-        //userByUserId already validated, now check inside
-        User address = Optional
-                .ofNullable(foodOrders.get(0).getUserByUserId())
-                .orElseThrow(() -> new ConstraintViolationException("Missing address", new HashSet<>()));
-        user.setStreetNameByStreetNameId(Optional.ofNullable(address.getStreetNameByStreetNameId()).orElseThrow());
-        user.setHouseNo(address.getHouseNo());
-        try {
-            checkConstraint(user, false);
-        } catch (AlreadyExistsException e) {
-            throw new RuntimeException(e);
-        }
-
-        foodOrders.forEach(foodOrder -> {
-            if (!menuRepository.existsById(foodOrder.getMenuByMenuId().getId())) {
-                throw new ConstraintViolationException("Invalid ID constraint", new HashSet<>());
-            } else {
-                foodOrder.setUserByUserId(user);
-                foodOrderRepository.save(foodOrder);
-            }
-
-        });
-
-        return dispatcher.dispatch(foodOrders);
-
     }
 
     @Override

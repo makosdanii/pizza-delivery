@@ -11,13 +11,10 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.sql.Date;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.pizzadelivery.server.utils.Dispatcher.INVENTORY_CAPACITY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -57,7 +54,7 @@ public class InventoryService extends ServiceORM<Inventory> {
         ingredientRepository.findAll().forEach(ingredient -> {
             int current = readInventoryLatestQt(ingredient);
             int deficit = INVENTORY_CAPACITY - current;
-            if (deficit > 0)
+            if (deficit > 0 && !Objects.equals(ingredient.getName(), "fuel"))
                 inventories.add(modifyInventory(new Inventory(deficit * ingredient.getPrice(), deficit, ingredient),
                         true));
         });
@@ -124,5 +121,10 @@ public class InventoryService extends ServiceORM<Inventory> {
     @Override
     public void checkConstraint(Inventory inventory, boolean notExistYet) {
 
+    }
+
+    @Transactional
+    public void saveInTransaction(Inventory inventory) {
+        inventoryRepository.save(inventory);
     }
 }

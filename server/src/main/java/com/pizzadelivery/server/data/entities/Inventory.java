@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 @Entity
 public class Inventory {
@@ -48,7 +48,7 @@ public class Inventory {
         this.current = currentQt;
     }
 
-    public Timestamp getModifiedAt() {
+    public Date getModifiedAt() {
         return id.getModifiedAt();
     }
 
@@ -60,7 +60,7 @@ public class Inventory {
         id.setIngredientByIngredientId(ingredientByIngredientId);
     }
 
-    public void setModifiedAt(Timestamp modifiedAt) {
+    public void setModifiedAt(Date modifiedAt) {
         id.setModifiedAt(modifiedAt);
     }
 
