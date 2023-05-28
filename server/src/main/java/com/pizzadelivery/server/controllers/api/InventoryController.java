@@ -8,6 +8,7 @@ import com.pizzadelivery.server.utils.Dispatcher;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,7 +35,8 @@ public class InventoryController extends Controller {
     }
 
     @GetMapping
-    public Iterable<Inventory> readInventory(@RequestParam(required = false) Date before) {
+    public Iterable<Inventory> readInventory(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date before) {
         return inventoryService.readInventory(before);
     }
 

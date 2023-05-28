@@ -3,6 +3,7 @@ package com.pizzadelivery.server.data.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,6 +12,7 @@ import java.util.Objects;
 @Embeddable
 public class OrderDeliveryPK implements Serializable {
     @CreationTimestamp
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @Temporal(TemporalType.TIMESTAMP)
     @Basic
     @Column(name = "delivered_at", nullable = false)

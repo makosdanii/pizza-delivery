@@ -130,22 +130,24 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
             throw new AlreadyExistsException();
         }
 
-        Role role = roleRepository.findById(user.getRoleByRoleId().getId()).orElseThrow(() ->
-                new ConstraintViolationException("Invalid ID", new HashSet<>()));
-
+        Role role;
         //if there's no authenticated user then only customer user can be created
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            Role customer;
+        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof String anonymous
+                && anonymous.equals("anonymousUser")) {
             try {
-                customer = roleRepository.findByName("customer").get(0);
+                role = roleRepository.findByName("customer").get(0);
             } catch (IndexOutOfBoundsException e) {
                 throw new ConstraintViolationException("Necessary role is yet to be created", new HashSet<>());
             }
-            user.setRoleByRoleId(customer);
+            user.setRoleByRoleId(role);
         } else if (SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new SimpleGrantedAuthority("admin"))) {
+            role = roleRepository.findById(user.getRoleByRoleId().getId()).orElseThrow(() ->
+                    new ConstraintViolationException("Invalid ID", new HashSet<>()));
             user.setRoleByRoleId(role);
         } else {
+            role = roleRepository.findById(user.getRoleByRoleId().getId()).orElseThrow(() ->
+                    new ConstraintViolationException("Invalid ID", new HashSet<>()));
             GrantedAuthority sufficientAuthentication = new SimpleGrantedAuthority(role.getName());
 
             if (!SecurityContextHolder.getContext().getAuthentication()

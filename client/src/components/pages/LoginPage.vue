@@ -83,6 +83,7 @@ export default {
             )
         this.snackText = `Login ${(this.name.length ? "succeeded" : "failed")}`
         this.snack = true;
+        this.$router.push("/")
 
       } else {
         if (await this.logout()) {

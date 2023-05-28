@@ -6,6 +6,7 @@ import com.pizzadelivery.server.data.validation.NonValidatedOnPersistTime;
 import com.pizzadelivery.server.services.OrderService;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +33,8 @@ public class OrderController extends Controller {
 
     @PreAuthorize("hasAnyAuthority('admin', 'customer')")
     @GetMapping
-    public Iterable<FoodOrder> readFoodOrders(@RequestParam(required = false) Date before) {
+    public Iterable<FoodOrder> readFoodOrders(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date before) {
         boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new SimpleGrantedAuthority("admin"));
         return orderService.readOrders(before, isAdmin);

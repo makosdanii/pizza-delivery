@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 import java.util.Objects;
@@ -18,6 +19,7 @@ public class FoodOrder {
     @Column(name = "id", nullable = false)
     private int id;
     @CreationTimestamp
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @Temporal(TemporalType.TIMESTAMP)
     @Basic
     @Column(name = "ordered_at", nullable = false)
