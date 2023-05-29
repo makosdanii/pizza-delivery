@@ -121,7 +121,7 @@ public class CarService extends ServiceORM<Car> {
         try {
             fuel = ingredientRepository.findByName("fuel").get(0);
         } catch (IndexOutOfBoundsException e) {
-            throw new ConstraintViolationException("Necessary ingredient is yet to be created", new HashSet<>());
+            throw new ConstraintViolationException("Necessary fuel ingredient is yet to be created", new HashSet<>());
         }
         CarIngredient fuelLevel = carIngredientRepository.findAllByIdCarByCarId(car).stream()
                 .filter(carIngredient -> carIngredient.getIngredientByIngredientId().equals(fuel))

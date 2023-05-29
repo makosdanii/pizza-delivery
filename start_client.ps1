@@ -1,2 +1,3 @@
-npm install --prefix ./client
-npm run dev --prefix ./client
+cd ./client
+npm install
+npm run dev

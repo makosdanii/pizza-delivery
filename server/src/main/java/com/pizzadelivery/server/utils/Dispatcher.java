@@ -109,7 +109,11 @@ public class Dispatcher {
         Edge orderEdge = findOrderEdge(foodOrders.get(0).getUserByUserId());
 
         List<Car> availableCars = sortAvailableCars(orderEdge);
-        if (availableCars.isEmpty()) {
+
+        if (availableCars.isEmpty() && carLocations.isEmpty()) {
+            log("Delivery service is unavailable");
+            return 0;
+        } else if (availableCars.isEmpty()) {
             log("All cars are busy");
             return 0;
         }
@@ -237,10 +241,6 @@ public class Dispatcher {
 
         List<Map.Entry<Car, Edge>> availableCars = carLocations.entrySet().stream()
                 .filter(entry -> entry.getValue().getId() != UNASSIGNED).toList();
-
-        if (availableCars.isEmpty() && carLocations.isEmpty()) {
-            log("Delivery service is unavailable");
-        }
 
         return availableCars.stream().sorted((o1, o2) -> {
             try {

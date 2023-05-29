@@ -137,7 +137,7 @@ public class UserService extends ServiceORM<User> implements UserDetailsService 
             try {
                 role = roleRepository.findByName("customer").get(0);
             } catch (IndexOutOfBoundsException e) {
-                throw new ConstraintViolationException("Necessary role is yet to be created", new HashSet<>());
+                throw new ConstraintViolationException("Necessary customer role is yet to be created", new HashSet<>());
             }
             user.setRoleByRoleId(role);
         } else if (SecurityContextHolder.getContext().getAuthentication()

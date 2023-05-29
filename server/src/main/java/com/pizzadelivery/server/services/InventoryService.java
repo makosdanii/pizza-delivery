@@ -72,7 +72,7 @@ public class InventoryService extends ServiceORM<Inventory> {
         if (inventory.getCarByCarId() == null) {
             Optional<Car> car = carRepository.findById(1);
             if (car.isEmpty()) {
-                System.out.println("No available car");
+                System.out.println("No available car for filling inventory");
                 return null;
             } else
                 inventory.setCarByCarId(car.get());
