@@ -15,4 +15,7 @@ export default defineConfig({
         host: '127.0.0.1',
         port: 5173,
     },
+    define: {
+        "MAPBOX_ACCESS_TOKEN": process.env.MAPBOX_ACCESS_TOKEN
+    }
 })

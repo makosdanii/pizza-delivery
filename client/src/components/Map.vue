@@ -1,16 +1,15 @@
 <script>
 import mapboxgl from 'mapbox-gl'
-
+const token = "MAPBOX_ACCESS_TOKEN"
 export default {
   data() {
     return {
       name: "Map",
-      token: "pk.eyJ1IjoibWFrb3NkYW5paSIsImEiOiJjbGdhb21hNHQxMndwM2xwaWUxOXY0bGU5In0.QCQaAMl0L4JC4gkOyTBzAg",
       url: 'mapbox://styles/makosdanii/clgaouuen000901n16y2jhfwz'
     }
   },
   mounted() {
-    mapboxgl.accessToken = this.token
+    mapboxgl.accessToken = token
     const map = new mapboxgl.Map({
       container: 'map',
       style: this.url,
