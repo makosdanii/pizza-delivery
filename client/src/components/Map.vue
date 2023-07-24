@@ -21,7 +21,7 @@ export default {
 
     map.on('load', () => {
       map.loadImage(
-          'src/assets/marker.png',
+          '@/assets/marker.png',
           (error, image) => {
             if (error) throw error;
             map.addImage('pizza', image);
