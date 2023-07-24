@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    base: "/nav-util/",
+    base: "/pizza-delivery/",
     plugins: [vue()],
     resolve: {
         alias: {
