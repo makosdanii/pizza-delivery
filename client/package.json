@@ -1,6 +1,7 @@
 {
-  "name": "client",
-  "version": "0.0.0",
+"name": "@makosdanii/pizza-delivery",
+  "homepage": "https://makosdanii.github.io/pizza-delivery/",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "vite --force",
